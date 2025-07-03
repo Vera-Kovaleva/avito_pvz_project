@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres
+    profiles:
+      - dev
+      - prod
+    environment:
+      POSTGRES_PASSWORD: password
+    ports:
+      - 5432:5432
+    volumes:
+        - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  server:
+    image: avito-pvz-server:latest
+    pull_policy: if_not_present
+    profiles:
+      - prod
+    environment:
+      - GIN_MODE=release
+      - GRPC_ADDRESS=:3000
+      - HTTP_ADDRESS=:8080
+      - PROMETHEUS_ADDRESS=:9000
+      - DB_CONNECTION=postgres://postgres:password@db:5432/postgres
+      - TOKEN_SECRET=26717534345066130764317071169763
+    ports:
+      - 8080:8080
+      - 3000:3000
+    depends_on:
+      - db

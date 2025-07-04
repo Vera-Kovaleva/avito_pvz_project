@@ -24,7 +24,7 @@ func NewUsers() *Users {
 	return &Users{}
 }
 
-func (r Users) Create(ctx context.Context, connection domain.Connection, user domain.User) error {
+func (r *Users) Create(ctx context.Context, connection domain.Connection, user domain.User) error {
 	const query = `
 insert into users
     (id, email, role, password_hash, token)

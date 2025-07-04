@@ -21,8 +21,8 @@ func TestPVZsIntegration(t *testing.T) {
 		uuid1 := uuid.New()
 		uuid2 := uuid.New()
 
-		pvz1 := fixtureCreatePVZ(t, ctx, connection, uuid1, "Москва")
-		pvz2 := fixtureCreatePVZ(t, ctx, connection, uuid2, "Казань")
+		pvz1 := fixtureCreatePVZ(ctx, t, connection, uuid1, "Москва")
+		pvz2 := fixtureCreatePVZ(ctx, t, connection, uuid2, "Казань")
 
 		pvzAll, err := repoPvz.FindAll(ctx, connection)
 
@@ -58,15 +58,14 @@ func TestPVZUnitCreate(t *testing.T) {
 
 	require.ErrorIs(t, err, repository.ErrPVZCreate)
 	require.ErrorContains(t, err, "some error")
-
 }
 
 func TestPVZUnitFindAll(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
 	connection.EXPECT().SelectContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-	Return(errors.New("some error")).
-	Once()
+		Return(errors.New("some error")).
+		Once()
 
 	_, err := repository.NewPVZ().FindAll(t.Context(), connection)
 
@@ -78,8 +77,8 @@ func TestPVZUnitFindByIDsl(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
 	connection.EXPECT().SelectContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-	Return(errors.New("some error")).
-	Once()
+		Return(errors.New("some error")).
+		Once()
 
 	var pvzIDs []domain.PVZID
 	_, err := repository.NewPVZ().FindByIDs(t.Context(), connection, pvzIDs)
@@ -89,8 +88,8 @@ func TestPVZUnitFindByIDsl(t *testing.T) {
 }
 
 func fixtureCreatePVZ(
-	t *testing.T,
 	ctx context.Context,
+	t *testing.T,
 	connection domain.Connection,
 	id domain.PVZID,
 	city string,

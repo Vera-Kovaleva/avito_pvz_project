@@ -18,7 +18,15 @@ var (
 
 type Product struct{}
 
-func (p *Product) Create(ctx context.Context, connection domain.Connection, product domain.Product) error {
+func NewProduct() *Product {
+	return &Product{}
+}
+
+func (p *Product) Create(
+	ctx context.Context,
+	connection domain.Connection,
+	product domain.Product,
+) error {
 	const query = `insert into Product
     (id, reception_id, product_type, created_at)
 	values
@@ -32,7 +40,11 @@ func (p *Product) Create(ctx context.Context, connection domain.Connection, prod
 	return nil
 }
 
-func (p *Product) DeleteLast(ctx context.Context, connection domain.Connection, receptionID domain.ReceptionID) error {
+func (p *Product) DeleteLast(
+	ctx context.Context,
+	connection domain.Connection,
+	receptionID domain.ReceptionID,
+) error {
 	const query = ` 
 	delete from products 
 	where id = (select id from product 
@@ -46,7 +58,14 @@ func (p *Product) DeleteLast(ctx context.Context, connection domain.Connection, 
 	return nil
 }
 
-func (p *Product) Search(ctx context.Context, connection domain.Connection, from *time.Time, to *time.Time, page *int, limit *int) ([]domain.Product, error) {
+func (p *Product) Search(
+	ctx context.Context,
+	connection domain.Connection,
+	from *time.Time,
+	to *time.Time,
+	page *int,
+	limit *int,
+) ([]domain.Product, error) {
 	var products []domain.Product
 
 	const query = `
@@ -58,8 +77,4 @@ func (p *Product) Search(ctx context.Context, connection domain.Connection, from
 	err := connection.SelectContext(ctx, &products, query, from, to, page, limit)
 
 	return products, err
-}
-
-func NewProduct() *Product {
-	return &Product{}
 }

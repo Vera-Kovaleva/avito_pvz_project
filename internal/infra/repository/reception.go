@@ -22,7 +22,11 @@ func NewReceptions() *Reception {
 	return &Reception{}
 }
 
-func (r *Reception) Create(ctx context.Context, connection domain.Connection, reception domain.Reception) error {
+func (r *Reception) Create(
+	ctx context.Context,
+	connection domain.Connection,
+	reception domain.Reception,
+) error {
 	const query = `insert into reseptions
     (id, created_at, pvz_id, status)
 	values
@@ -36,7 +40,11 @@ func (r *Reception) Create(ctx context.Context, connection domain.Connection, re
 	return nil
 }
 
-func (r *Reception) Close(ctx context.Context, connection domain.Connection, receptionID domain.ReceptionID) error {
+func (r *Reception) Close(
+	ctx context.Context,
+	connection domain.Connection,
+	receptionID domain.ReceptionID,
+) error {
 	const query = `update receptions set status = 'close' where id = $1`
 
 	_, err := connection.ExecContext(ctx, query, receptionID)
@@ -47,7 +55,11 @@ func (r *Reception) Close(ctx context.Context, connection domain.Connection, rec
 	return nil
 }
 
-func (r *Reception) FindActive(ctx context.Context, connection domain.Connection, pvzID domain.PVZID) (domain.Reception, error) {
+func (r *Reception) FindActive(
+	ctx context.Context,
+	connection domain.Connection,
+	pvzID domain.PVZID,
+) (domain.Reception, error) {
 	const query = `select 1 from receptions where pvz_id = $1 and status = 'in_progress'`
 
 	var reception domain.Reception
@@ -59,13 +71,17 @@ func (r *Reception) FindActive(ctx context.Context, connection domain.Connection
 	return reception, nil
 }
 
-func (r *Reception) FindByIDs(ctx context.Context, connection domain.Connection, receptionIDs []domain.ReceptionID) ([]domain.Reception, error) {
+func (r *Reception) FindByIDs(
+	ctx context.Context,
+	connection domain.Connection,
+	receptionIDs []domain.ReceptionID,
+) ([]domain.Reception, error) {
 	const query = `select (id, created_at, pvz_id, status) from receptions where id = any($1)`
 
 	var receptions []domain.Reception
 	err := connection.SelectContext(ctx, &receptions, query, receptionIDs)
 	if err != nil {
-		return nil, errors.Join(ErrFindByIDs, err)
+		return nil, errors.Join(ErrPVZFindByIDs, err)
 	}
 
 	return receptions, nil

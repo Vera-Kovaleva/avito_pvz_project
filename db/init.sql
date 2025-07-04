@@ -23,9 +23,9 @@ CREATE TYPE product_type AS ENUM ('электроника', 'одежда', 'о�
 
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    type product_type NOT NULL,
     reception_id UUID NOT NULL,
+    type product_type NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     FOREIGN KEY(reception_id) REFERENCES receptions(id) ON DELETE CASCADE
 );
 

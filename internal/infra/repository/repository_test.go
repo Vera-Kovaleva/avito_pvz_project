@@ -31,7 +31,6 @@ func rollback(t *testing.T, receiver func(context.Context, domain.Connection)) {
 		provider.ExecuteTx(
 			t.Context(),
 			func(ctx context.Context, connection domain.Connection) error {
-
 				clearTable(t, connection, "products")
 				clearTable(t, connection, "receptions")
 				clearTable(t, connection, "pvz")

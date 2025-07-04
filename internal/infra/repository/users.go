@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"avito_pvz/internal/domain" 
+	"avito_pvz/internal/domain"
 )
 
-var _ domain.UsersRepository = (*Users)(nil) 
+var _ domain.UsersRepository = (*Users)(nil)
 
 var (
 	errUsers                   = errors.New("users repository error")
@@ -31,7 +31,15 @@ insert into users
 values
     ($1, $2, $3, $4, $5)`
 
-	_, err := connection.ExecContext(ctx, query, user.ID, user.Email, user.Role, user.PasswordHash, user.Token)
+	_, err := connection.ExecContext(
+		ctx,
+		query,
+		user.ID,
+		user.Email,
+		user.Role,
+		user.PasswordHash,
+		user.Token,
+	)
 	if err != nil {
 		return errors.Join(ErrUsersCreate, err)
 	}
@@ -53,4 +61,3 @@ func (r *Users) Update(context.Context, domain.Connection, domain.User) error {
 func (r *Users) UpdateTokenByEmail(context.Context, domain.Connection, string, string) error {
 	panic("unimplemented")
 }
-

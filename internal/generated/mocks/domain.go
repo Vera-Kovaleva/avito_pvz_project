@@ -5,9 +5,10 @@
 package mocks
 
 import (
-	"avito_pvz/internal/domain"
 	"context"
 	"time"
+
+	"avito_pvz/internal/domain"
 
 	mock "github.com/stretchr/testify/mock"
 )

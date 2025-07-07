@@ -31,17 +31,17 @@ type (
 	}
 
 	Reception struct {
-		ID        ReceptionID
-		PVZID     PVZID
-		Status    ReceptionStatus
-		CreatedAt time.Time
+		ID        ReceptionID     `db:"id"`
+		PVZID     PVZID           `db:"pvz_id"`
+		Status    ReceptionStatus `db:"status"`
+		CreatedAt time.Time       `db:"created_at"`
 	}
 
 	Product struct {
-		ID          ProductID
-		ReceptionID ReceptionID
-		Type        ProductType
-		CreatedAt   time.Time
+		ID          ProductID   `db:"id"`
+		ReceptionID ReceptionID `db:"reception_id"`
+		Type        ProductType `db:"type"`
+		CreatedAt   time.Time   `db:"created_at"`
 	}
 
 	PVZReceptionsProducts struct {

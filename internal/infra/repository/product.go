@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"avito_pvz/internal/domain"
@@ -11,9 +12,10 @@ import (
 var _ domain.ProductsRepository = (*Product)(nil)
 
 var (
-	errProduct        = errors.New("Product repository error")
-	ErrProductsCreate = errors.Join(errProduct, errors.New("create failed"))
-	ErrProductsDelete = errors.Join(errProduct, errors.New("delete failed"))
+	errProduct       = errors.New("products repository error")
+	ErrCreateProduct = errors.Join(errProduct, errors.New("create failed"))
+	ErrDeleteProduct = errors.Join(errProduct, errors.New("delete failed"))
+	ErrSearchProduct = errors.Join(errProduct, errors.New("search failed"))
 )
 
 type Product struct{}
@@ -27,14 +29,14 @@ func (p *Product) Create(
 	connection domain.Connection,
 	product domain.Product,
 ) error {
-	const query = `insert into Product
-    (id, reception_id, product_type, created_at)
+	const query = `insert into products
+    (id, reception_id, type, created_at)
 	values
-    ($1, $2, $3, default)`
+    ($1, $2, $3, $4)`
 
-	_, err := connection.ExecContext(ctx, query, product.ID, product.ReceptionID, product.Type)
+	_, err := connection.ExecContext(ctx, query, product.ID, product.ReceptionID, product.Type, product.CreatedAt)
 	if err != nil {
-		return errors.Join(ErrPVZCreate, err)
+		return errors.Join(ErrCreateProduct, err)
 	}
 
 	return nil
@@ -47,12 +49,12 @@ func (p *Product) DeleteLast(
 ) error {
 	const query = ` 
 	delete from products 
-	where id = (select id from product 
+	where id = (select id from products
 	where reception_id = $1 order by created_at desc limit 1)`
 
 	_, err := connection.ExecContext(ctx, query, receptionID)
 	if err != nil {
-		return errors.Join(ErrProductsDelete, err)
+		return errors.Join(ErrDeleteProduct, err)
 	}
 
 	return nil
@@ -66,15 +68,54 @@ func (p *Product) Search(
 	page *int,
 	limit *int,
 ) ([]domain.Product, error) {
+
+	if from != nil && to != nil && to.Before(*from) {
+		return nil, errors.Join(ErrSearchProduct, errors.New("from must be less than to"))
+	} else if *page < 0 {
+		return nil, errors.Join(ErrSearchProduct, errors.New("invalud page"))
+	} else if *limit <= 0 {
+		return nil, errors.Join(ErrSearchProduct, errors.New("invalid limit"))
+	} else if page != nil && limit == nil {
+		return nil, errors.Join(ErrSearchProduct, errors.New("page without limit"))
+	}
+
+	const baseQuery = `select id, reception_id, type, created_at from products`
+	var args []interface{}
+	var conditions = ""
+
+	if from != nil && to != nil {
+		conditions = "created_at between $1 and $2"
+		args = append(args, *from, *to)
+
+	} else if from != nil {
+		conditions = "created_at > $1"
+		args = append(args, *from)
+
+	} else if to != nil {
+		conditions = "created_at < $1"
+		args = append(args, *to)
+	}
+
+	query := baseQuery
+	if len(conditions) > 0 {
+		query += " where " + conditions
+	}
+	query += " order by created_at desc"
+
+	argPos := len(args) + 1
+	if page != nil && limit != nil {
+		query += " offset $" + strconv.Itoa(argPos) + " limit $" + strconv.Itoa(argPos+1)
+		args = append(args, (*page)*(*limit), *limit)
+	} else if limit != nil {
+		query += " limit $" + strconv.Itoa(argPos)
+		args = append(args, *limit)
+	}
+
 	var products []domain.Product
+	err := connection.SelectContext(ctx, &products, query, args...)
+	if err != nil {
+		return nil, errors.Join(ErrSearchProduct, err)
+	}
+	return products, nil
 
-	const query = `
-	select * from products 
-	where created_at between $1 and $2 
-	order by created_at desc 
-	offset $3 limit $4`
-
-	err := connection.SelectContext(ctx, &products, query, from, to, page, limit)
-
-	return products, err
 }

@@ -12,9 +12,8 @@ var _ domain.UsersRepository = (*Users)(nil)
 var (
 	errUsers                   = errors.New("users repository error")
 	ErrUsersCreate             = errors.Join(errUsers, errors.New("create failed"))
-	ErrUsersRead               = errors.Join(errUsers, errors.New("read failed"))
+	ErrUsersReadByEmail        = errors.Join(errUsers, errors.New("read by email failed"))
 	ErrUsersUpdate             = errors.Join(errUsers, errors.New("update failed"))
-	ErrUsersDelete             = errors.Join(errUsers, errors.New("delete failed"))
 	ErrUsersUpdateTokenByEmail = errors.Join(errUsers, errors.New("update token by email failed"))
 )
 
@@ -47,17 +46,36 @@ values
 	return nil
 }
 
-// ReadByEmail implements domain.UsersRepository.
-func (r *Users) ReadByEmail(context.Context, domain.Connection, string) (domain.User, error) {
-	panic("unimplemented")
+func (r *Users) ReadByEmail(ctx context.Context, connection domain.Connection, email string) (domain.User, error) {
+	const query = `select id, email, role, password_hash, token from users where email = $1`
+
+	var user domain.User
+	err := connection.GetContext(ctx, &user, query, email)
+	if err != nil {
+		return user, errors.Join(ErrUsersReadByEmail, err)
+	}
+
+	return user, nil
 }
 
-// Update implements domain.UsersRepository.
-func (r *Users) Update(context.Context, domain.Connection, domain.User) error {
-	panic("unimplemented")
+func (r *Users) Update(ctx context.Context, connection domain.Connection, user domain.User) error {
+	const query = `update users set email = $2, role =$3, password_hash = $4, token = $5 where id = $1`
+
+	_, err := connection.ExecContext(ctx, query, user.ID, user.Email, user.Role, user.PasswordHash, user.Token)
+	if err != nil {
+		return errors.Join(ErrUsersUpdate, err)
+	}
+
+	return nil
 }
 
-// UpdateTokenByEmail implements domain.UsersRepository.
-func (r *Users) UpdateTokenByEmail(context.Context, domain.Connection, string, string) error {
-	panic("unimplemented")
+func (r *Users) UpdateTokenByEmail(ctx context.Context, connection domain.Connection, email string, token string) error {
+	const query = `update users set token = $1 where email = $2`
+
+	_, err := connection.ExecContext(ctx, query, token, email)
+	if err != nil {
+		return errors.Join(ErrUsersUpdateTokenByEmail, err)
+	}
+
+	return nil
 }

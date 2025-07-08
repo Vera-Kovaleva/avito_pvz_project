@@ -62,33 +62,27 @@ func TestProductIntegrationSearch(t *testing.T) {
 
 		now := time.Now()
 
-		_ = fixtureCreateProduct(ctx, t, connection, productID1, receptionID, "электроника", now.Add(-2*time.Hour))
+		product1 := fixtureCreateProduct(ctx, t, connection, productID1, receptionID, "электроника", now.Add(-2*time.Hour))
 		product2 := fixtureCreateProduct(ctx, t, connection, productID2, receptionID, "одежда", now.Add(-1*time.Hour))
 		product3 := fixtureCreateProduct(ctx, t, connection, productID3, receptionID, "обувь", now)
 
 		limit := 1
-		page := 1
+		page := 0
 		productsFound, err := products.Search(ctx, connection, nil, nil, &page, &limit)
+		require.NoError(t, err)
+		require.Len(t, productsFound, 1)
+		require.Equal(t, product3.ID, productsFound[0].ID)
+
+		page = 1
+		productsFound, err = products.Search(ctx, connection, nil, nil, &page, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, 1)
 		require.Equal(t, product2.ID, productsFound[0].ID)
 
-		page = 0
-		productsFound, err = products.Search(ctx, connection, nil, nil, &page, &limit)
-		require.NoError(t, err)
-		require.Len(t, productsFound, 1)
-		require.Equal(t, product3.ID, productsFound[0].ID)
-
 		limit = 3
-		to := now.Add(90 * time.Minute)
-		from := now.Add(-90 * time.Minute)
-		productsFound, err = products.Search(ctx, connection, &from, &to, &page, &limit)
-		require.NoError(t, err)
-		require.Len(t, productsFound, 2)
-		require.Equal(t, product3.ID, productsFound[0].ID)
-		require.Equal(t, product2.ID, productsFound[1].ID)
-
-		from = now.Add(-3 * time.Hour)
+		page = 0
+		to := now.Add(4 * time.Hour)
+		from := now.Add(-4 * time.Hour)
 		productsFound, err = products.Search(ctx, connection, &from, nil, &page, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, 3)
@@ -97,21 +91,57 @@ func TestProductIntegrationSearch(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, productsFound, 3)
 
-		err = products.DeleteLast(ctx, connection, receptionID)
+		productsFound, err = products.Search(ctx, connection, &from, &to, &page, &limit)
 		require.NoError(t, err)
+		require.Len(t, productsFound, 3)
+		require.Equal(t, product1.ID, productsFound[2].ID)
 
 		limit = 1
 		productsFound, err = products.Search(ctx, connection, nil, nil, nil, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, limit)
-		require.Equal(t, product2.ID, productsFound[0].ID)
-
-		from = now.Add(-90 * time.Minute)
-		productsFound, err = products.Search(ctx, connection, &from, nil, nil, &limit)
-		require.NoError(t, err)
-		require.Len(t, productsFound, 1)
-		require.Equal(t, product2.ID, productsFound[0].ID)
+		require.Equal(t, product3.ID, productsFound[0].ID)
 	})
+}
+
+func TestProductSearchErrors(t *testing.T) {
+	connection := mocks.NewMockConnection(t)
+
+	from := time.Now()
+	to := from.Add(-time.Hour)
+	_, err := repository.NewProduct().Search(t.Context(), connection, &from, &to, nil, nil)
+	require.ErrorIs(t, err, repository.ErrSearchProduct)
+	require.ErrorContains(t, err, "from must be less than to")
+
+	page := -1
+	limit := 1
+	_, err = repository.NewProduct().Search(t.Context(), connection, nil, nil, &page, &limit)
+	require.ErrorIs(t, err, repository.ErrSearchProduct)
+	require.ErrorContains(t, err, "invalid page")
+
+	page = 1
+	limit = 0
+	_, err = repository.NewProduct().Search(t.Context(), connection, nil, nil, &page, &limit)
+	require.ErrorIs(t, err, repository.ErrSearchProduct)
+	require.ErrorContains(t, err, "invalid limit")
+
+	limit = 1
+	_, err = repository.NewProduct().Search(t.Context(), connection, nil, nil, &page, nil)
+	require.ErrorIs(t, err, repository.ErrSearchProduct)
+	require.ErrorContains(t, err, "page without limit")
+}
+
+func TestProductUnitSearch(t *testing.T) {
+	connection := mocks.NewMockConnection(t)
+
+	connection.EXPECT().
+		SelectContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(errors.New("some error")).
+		Once()
+
+	_, err := repository.NewProduct().Search(t.Context(), connection, nil, nil, nil, nil)
+	require.ErrorIs(t, err, repository.ErrSearchProduct)
+	require.ErrorContains(t, err, "some error")
 }
 
 func TestProductUnitCreate(t *testing.T) {

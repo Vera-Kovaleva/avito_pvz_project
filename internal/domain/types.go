@@ -17,11 +17,11 @@ type (
 	ProductType     string
 
 	User struct {
-		ID           UserID
-		Email        string
-		Role         UserRole
-		PasswordHash string
-		Token        string
+		ID           UserID   `db:"id"`
+		Email        string   `db:"email"`
+		Role         UserRole `db:"role"`
+		PasswordHash string   `db:"password_hash"`
+		Token        string   `db:"token"`
 	}
 
 	PVZ struct {

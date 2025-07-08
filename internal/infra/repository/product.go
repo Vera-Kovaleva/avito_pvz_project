@@ -71,9 +71,9 @@ func (p *Product) Search(
 
 	if from != nil && to != nil && to.Before(*from) {
 		return nil, errors.Join(ErrSearchProduct, errors.New("from must be less than to"))
-	} else if *page < 0 {
-		return nil, errors.Join(ErrSearchProduct, errors.New("invalud page"))
-	} else if *limit <= 0 {
+	} else if page != nil && *page < 0 {
+		return nil, errors.Join(ErrSearchProduct, errors.New("invalid page"))
+	} else if limit != nil && *limit <= 0 {
 		return nil, errors.Join(ErrSearchProduct, errors.New("invalid limit"))
 	} else if page != nil && limit == nil {
 		return nil, errors.Join(ErrSearchProduct, errors.New("page without limit"))
@@ -88,11 +88,11 @@ func (p *Product) Search(
 		args = append(args, *from, *to)
 
 	} else if from != nil {
-		conditions = "created_at > $1"
+		conditions = "created_at >= $1"
 		args = append(args, *from)
 
 	} else if to != nil {
-		conditions = "created_at < $1"
+		conditions = "created_at <= $1"
 		args = append(args, *to)
 	}
 

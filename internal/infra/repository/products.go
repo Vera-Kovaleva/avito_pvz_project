@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"avito_pvz/internal/domain"
@@ -71,44 +72,49 @@ func (p *Product) Search(
 
 	if from != nil && to != nil && to.Before(*from) {
 		return nil, errors.Join(ErrSearchProduct, errors.New("from must be less than to"))
-	} else if page != nil && *page < 0 {
+	}
+	if page != nil && *page < 0 {
 		return nil, errors.Join(ErrSearchProduct, errors.New("invalid page"))
-	} else if limit != nil && *limit <= 0 {
+	}
+	if limit != nil && *limit <= 0 {
 		return nil, errors.Join(ErrSearchProduct, errors.New("invalid limit"))
-	} else if page != nil && limit == nil {
+	}
+	if page != nil && limit == nil {
 		return nil, errors.Join(ErrSearchProduct, errors.New("page without limit"))
 	}
 
-	const baseQuery = `select id, reception_id, type, created_at from products`
-	var args []interface{}
-	var conditions = ""
+	var conditions []string
+	var limits string
+	var args []any
 
-	if from != nil && to != nil {
-		conditions = "created_at between $1 and $2"
-		args = append(args, *from, *to)
+	arg := func(v any) string {
+		args = append(args, v)
 
-	} else if from != nil {
-		conditions = "created_at >= $1"
-		args = append(args, *from)
-
-	} else if to != nil {
-		conditions = "created_at <= $1"
-		args = append(args, *to)
+		return "$" + strconv.Itoa(len(args))
 	}
 
-	query := baseQuery
-	if len(conditions) > 0 {
-		query += " where " + conditions
-	}
-	query += " order by created_at desc"
+	query := `select id, reception_id, type, created_at from products`
 
-	argPos := len(args) + 1
-	if page != nil && limit != nil {
-		query += " offset $" + strconv.Itoa(argPos) + " limit $" + strconv.Itoa(argPos+1)
-		args = append(args, (*page)*(*limit), *limit)
-	} else if limit != nil {
-		query += " limit $" + strconv.Itoa(argPos)
-		args = append(args, *limit)
+	if from != nil {
+		conditions = append(conditions, arg(*from)+" <= created_at")
+	}
+	if to != nil {
+		conditions = append(conditions, "created_at <= "+arg(*to))
+	}
+	if limit != nil {
+		if page != nil {
+			limits += " offset " + arg((*page)*(*limit))
+		}
+
+		limits += " limit " + arg(*limit)
+	}
+
+	if 0 < len(conditions) {
+		query += " where " + strings.Join(conditions, " and ")
+	}
+	query += " order by created_at"
+	if limits != "" {
+		query += limits
 	}
 
 	var products []domain.Product

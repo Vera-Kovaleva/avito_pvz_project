@@ -26,9 +26,9 @@ func (p *PVZ) Create(ctx context.Context, connection domain.Connection, pvz doma
 	const query = `insert into pvz
     (id, city, registered_at)
 	values
-    ($1, $2, default)`
+    ($1, $2, $3)`
 
-	_, err := connection.ExecContext(ctx, query, pvz.ID, pvz.City)
+	_, err := connection.ExecContext(ctx, query, pvz.ID, pvz.City, pvz.RegisteredAt)
 	if err != nil {
 		return errors.Join(ErrPVZCreate, err)
 	}

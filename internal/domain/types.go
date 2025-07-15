@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -53,6 +54,11 @@ type (
 		Reception Reception
 		Products  []Product
 	}
+
+	AuthenticatedUser interface {
+		GetUserID() UserID
+		GetUserRole() UserRole
+	}
 )
 
 const (
@@ -75,4 +81,32 @@ const (
 	Electronics ProductType = "электроника"
 	Clothes     ProductType = "одежда"
 	Shoes       ProductType = "обувь"
+)
+
+type (
+	UsersInterface interface {
+		Create(context.Context, string, string, UserRole) (User, error)
+		FindTokenByEmailAndPassword(context.Context, string, string) (string, error)
+		LoginByToken(context.Context, string) (AuthenticatedUser, error)
+	}
+
+	PVZsInterface interface {
+		Create(context.Context, AuthenticatedUser, PVZCity) (PVZ, error)
+		FindPVZReceptionProducts(
+			context.Context,
+			AuthenticatedUser,
+			*time.Time,
+			*time.Time,
+			*int,
+			*int,
+		) ([]PVZReceptionsProducts, error)
+		FindAll(context.Context) ([]PVZ, error)
+	}
+
+	ReceptionsInterface interface {
+		Create(context.Context, AuthenticatedUser, PVZID) (Reception, error)
+		CreateProduct(context.Context, AuthenticatedUser, PVZID, ProductType) (Product, error)
+		DeleteLastProduct(context.Context, AuthenticatedUser, PVZID) error
+		Close(context.Context, AuthenticatedUser, PVZID) (Reception, error)
+	}
 )

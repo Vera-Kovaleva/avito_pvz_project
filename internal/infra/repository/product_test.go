@@ -181,3 +181,46 @@ func fixtureCreateProduct(ctx context.Context, t *testing.T, connection domain.C
 
 	return product
 }
+
+func TestUnitProducts_Search(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		from, to     *time.Time
+		page, limit  *int
+		prepareMocks func(*mocks.MockConnection)
+		check        func(*testing.T, []domain.Product, error)
+	}{
+		{
+			name: "Success - no params",
+			prepareMocks: func(connection *mocks.MockConnection) {
+				const expectedQuery = "select id, reception_id, type, created_at from products order by created_at"
+				connection.EXPECT().
+					SelectContext(mock.Anything, mock.Anything, expectedQuery).
+					Return(nil).
+					Once()
+			},
+			check: func(t *testing.T, _ []domain.Product, err error) {
+				require.NoError(t, err)
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			connection := mocks.NewMockConnection(t)
+			if test.prepareMocks != nil {
+				test.prepareMocks(connection)
+			}
+
+			products, err := repository.NewProduct().
+				Search(t.Context(), connection, test.from, test.to, test.page, test.limit)
+
+			if test.check != nil {
+				test.check(t, products, err)
+			}
+		})
+	}
+}

@@ -50,7 +50,7 @@ func TestPVZUnitCreate(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
 	connection.EXPECT().
-		ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(0, errors.New("some error")).
 		Once()
 

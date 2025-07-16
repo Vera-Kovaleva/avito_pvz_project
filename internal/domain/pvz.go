@@ -11,13 +11,31 @@ import (
 var _ PVZsInterface = (*PVZService)(nil)
 
 var (
-	errPVZ                                                  = errors.New("pvz service error")
-	ErrAvitoServiceCreatePVZ                                = errors.Join(errPVZ, errors.New("create pvz failed"))
-	ErrAvitoServiceFindAllPVZ                               = errors.Join(errPVZ, errors.New("find all last pvz failed"))
-	errAvitoServiceFindPVZReceptionProducts                 = errors.Join(errPVZ, errors.New("search failed"))
-	ErrAvitoServiceFindPVZReceptionProductsSearchProducts   = errors.Join(errAvitoServiceFindPVZReceptionProducts, errors.New("search products failed"))
-	ErrAvitoServiceFindPVZReceptionProductsSearchPVZs       = errors.Join(errAvitoServiceFindPVZReceptionProducts, errors.New("search pvzs failed"))
-	ErrAvitoServiceFindPVZReceptionProductsSearchReceptions = errors.Join(errAvitoServiceFindPVZReceptionProducts, errors.New("search reseptions failed"))
+	errPVZ                   = errors.New("pvz service error")
+	ErrAvitoServiceCreatePVZ = errors.Join(
+		errPVZ,
+		errors.New("create pvz failed"),
+	)
+	ErrAvitoServiceFindAllPVZ = errors.Join(
+		errPVZ,
+		errors.New("find all last pvz failed"),
+	)
+	errAvitoServiceFindPVZReceptionProducts = errors.Join(
+		errPVZ,
+		errors.New("search failed"),
+	)
+	ErrAvitoServiceFindPVZReceptionProductsSearchProducts = errors.Join(
+		errAvitoServiceFindPVZReceptionProducts,
+		errors.New("search products failed"),
+	)
+	ErrAvitoServiceFindPVZReceptionProductsSearchPVZs = errors.Join(
+		errAvitoServiceFindPVZReceptionProducts,
+		errors.New("search pvzs failed"),
+	)
+	ErrAvitoServiceFindPVZReceptionProductsSearchReceptions = errors.Join(
+		errAvitoServiceFindPVZReceptionProducts,
+		errors.New("search reseptions failed"),
+	)
 )
 
 type PVZService struct {
@@ -27,7 +45,12 @@ type PVZService struct {
 	receptionRepo ReceptionsRepository
 }
 
-func NewPVZService(provider ConnectionProvider, pvzRepo PVZsRepository, productRepo ProductsRepository, receptionRepo ReceptionsRepository) *PVZService {
+func NewPVZService(
+	provider ConnectionProvider,
+	pvzRepo PVZsRepository,
+	productRepo ProductsRepository,
+	receptionRepo ReceptionsRepository,
+) *PVZService {
 	return &PVZService{
 		provider:      provider,
 		pvzRepo:       pvzRepo,
@@ -36,7 +59,11 @@ func NewPVZService(provider ConnectionProvider, pvzRepo PVZsRepository, productR
 	}
 }
 
-func (s *PVZService) Create(ctx context.Context, authUser AuthenticatedUser, pvzCity PVZCity) (PVZ, error) {
+func (s *PVZService) Create(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	pvzCity PVZCity,
+) (PVZ, error) {
 	//* Только пользователь с ролью «модератор» может завести ПВЗ в системе.
 	var pvz PVZ
 	err := s.provider.ExecuteTx(ctx, func(ctx context.Context, c Connection) error {
@@ -67,7 +94,14 @@ func (s *PVZService) FindAll(ctx context.Context) ([]PVZ, error) {
 	return pvzsAll, nil
 }
 
-func (s *PVZService) FindPVZReceptionProducts(ctx context.Context, authUser AuthenticatedUser, from *time.Time, to *time.Time, page *int, limit *int) ([]PVZReceptionsProducts, error) {
+func (s *PVZService) FindPVZReceptionProducts(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	from *time.Time,
+	to *time.Time,
+	page *int,
+	limit *int,
+) ([]PVZReceptionsProducts, error) {
 	var result []PVZReceptionsProducts
 
 	var products []Product
@@ -115,15 +149,21 @@ func (s *PVZService) FindPVZReceptionProducts(ctx context.Context, authUser Auth
 func Builder(products []Product, receptions []Reception, pvzs []PVZ) []PVZReceptionsProducts {
 	productsToReceptionsByID := make(map[ReceptionID][]Product)
 	for _, product := range products {
-		productsToReceptionsByID[product.ReceptionID] = append(productsToReceptionsByID[product.ReceptionID], product)
+		productsToReceptionsByID[product.ReceptionID] = append(
+			productsToReceptionsByID[product.ReceptionID],
+			product,
+		)
 	}
 
 	receptionsToPVZsByID := make(map[PVZID][]ReceptionsProducts)
 	for _, reception := range receptions {
-		receptionsToPVZsByID[reception.PVZID] = append(receptionsToPVZsByID[reception.PVZID], ReceptionsProducts{
-			Reception: reception,
-			Products:  productsToReceptionsByID[reception.ID],
-		})
+		receptionsToPVZsByID[reception.PVZID] = append(
+			receptionsToPVZsByID[reception.PVZID],
+			ReceptionsProducts{
+				Reception: reception,
+				Products:  productsToReceptionsByID[reception.ID],
+			},
+		)
 	}
 
 	var result []PVZReceptionsProducts

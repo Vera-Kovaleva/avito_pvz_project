@@ -1,7 +1,7 @@
 package log
 
-// а о а ... ???
+import "log/slog"
 
-func ErrorAttr(err error) string {
-	return err.Error()
+func ErrorAttr(err error) slog.Attr {
+	return slog.String("error", err.Error())
 }

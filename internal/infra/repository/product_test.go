@@ -28,8 +28,24 @@ func TestProductIntegration(t *testing.T) {
 		productID2 := uuid.New()
 		productID3 := uuid.New()
 		now := time.Now()
-		_ = fixtureCreateProduct(ctx, t, connection, productID1, receptionID, "электроника", now.Add(-2*time.Hour))
-		product2 := fixtureCreateProduct(ctx, t, connection, productID2, receptionID, "одежда", now.Add(-1*time.Hour))
+		_ = fixtureCreateProduct(
+			ctx,
+			t,
+			connection,
+			productID1,
+			receptionID,
+			"электроника",
+			now.Add(-2*time.Hour),
+		)
+		product2 := fixtureCreateProduct(
+			ctx,
+			t,
+			connection,
+			productID2,
+			receptionID,
+			"одежда",
+			now.Add(-1*time.Hour),
+		)
 		_ = fixtureCreateProduct(ctx, t, connection, productID3, receptionID, "обувь", now)
 
 		err := products.DeleteLast(ctx, connection, receptionID)
@@ -62,8 +78,24 @@ func TestProductIntegrationSearch(t *testing.T) {
 
 		now := time.Now()
 
-		product1 := fixtureCreateProduct(ctx, t, connection, productID1, receptionID, "электроника", now.Add(-2*time.Hour))
-		product2 := fixtureCreateProduct(ctx, t, connection, productID2, receptionID, "одежда", now.Add(-1*time.Hour))
+		product1 := fixtureCreateProduct(
+			ctx,
+			t,
+			connection,
+			productID1,
+			receptionID,
+			"электроника",
+			now.Add(-2*time.Hour),
+		)
+		product2 := fixtureCreateProduct(
+			ctx,
+			t,
+			connection,
+			productID2,
+			receptionID,
+			"одежда",
+			now.Add(-1*time.Hour),
+		)
 		product3 := fixtureCreateProduct(ctx, t, connection, productID3, receptionID, "обувь", now)
 
 		limit := 1
@@ -170,7 +202,15 @@ func TestProductUnitDelete(t *testing.T) {
 	require.ErrorContains(t, err, "some error")
 }
 
-func fixtureCreateProduct(ctx context.Context, t *testing.T, connection domain.Connection, id domain.ReceptionID, receptionID domain.ReceptionID, productType domain.ProductType, createdAt time.Time) domain.Product {
+func fixtureCreateProduct(
+	ctx context.Context,
+	t *testing.T,
+	connection domain.Connection,
+	id domain.ReceptionID,
+	receptionID domain.ReceptionID,
+	productType domain.ProductType,
+	createdAt time.Time,
+) domain.Product {
 	product := domain.Product{
 		ID:          id,
 		ReceptionID: receptionID,

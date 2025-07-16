@@ -17,7 +17,6 @@ import (
 
 func TestReceptionIntegration(t *testing.T) {
 	rollback(t, func(ctx context.Context, connection domain.Connection) {
-
 		repoReception := repository.NewReceptions()
 
 		pvzID := uuid.New()
@@ -53,7 +52,6 @@ func TestReceptionIntegration(t *testing.T) {
 		require.Equal(t, receptionsFoundByIDs[0].PVZID, reception2.PVZID)
 		require.Equal(t, receptionsFoundByIDs[0].Status, domain.Close)
 		require.Equal(t, receptionsFoundByIDs[1].Status, domain.InProgress)
-
 	})
 }
 
@@ -98,7 +96,13 @@ func TestReceptionUnitFindByIDs(t *testing.T) {
 	require.ErrorContains(t, err, "some error")
 }
 
-func fixtureCreateReceptin(ctx context.Context, t *testing.T, connection domain.Connection, id domain.ReceptionID, pvzID domain.PVZID) domain.Reception {
+func fixtureCreateReceptin(
+	ctx context.Context,
+	t *testing.T,
+	connection domain.Connection,
+	id domain.ReceptionID,
+	pvzID domain.PVZID,
+) domain.Reception {
 	reception := domain.Reception{
 		ID:     id,
 		PVZID:  pvzID,

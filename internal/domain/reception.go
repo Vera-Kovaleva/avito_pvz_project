@@ -11,23 +11,59 @@ import (
 var _ ReceptionsInterface = (*ReceptionService)(nil)
 
 var (
-	errReception                             = errors.New("reception service error")
-	ErrAvitoServiceReceptionInvalidPVZID     = errors.Join(errReception, errors.New("invalid pvz id"))
-	errAvitoServiceCreateReception           = errors.Join(errReception, errors.New("create failed error"))
-	ErrAvitoServiceCreateReception           = errors.Join(errAvitoServiceCreateReception, errors.New("create failed"))
-	ErrAvitoServiceCreateReceptionFindActive = errors.Join(errAvitoServiceCreateReception, errors.New("find active failed"))
-	errAvitoServiceCloseReception            = errors.Join(errReception, errors.New("close failed"))
-	ErrAvitoServiceCloseReceptionFindActive  = errors.Join(errAvitoServiceCloseReception, errors.New("find active failed"))
-	ErrAvitoServiceCloseReception            = errors.Join(errAvitoServiceCloseReception, errors.New("close failed"))
+	errReception                         = errors.New("reception service error")
+	ErrAvitoServiceReceptionInvalidPVZID = errors.Join(
+		errReception,
+		errors.New("invalid pvz id"),
+	)
+	errAvitoServiceCreateReception = errors.Join(
+		errReception,
+		errors.New("create failed error"),
+	)
+	ErrAvitoServiceCreateReception = errors.Join(
+		errAvitoServiceCreateReception,
+		errors.New("create failed"),
+	)
+	ErrAvitoServiceCreateReceptionFindActive = errors.Join(
+		errAvitoServiceCreateReception,
+		errors.New("find active failed"),
+	)
+	errAvitoServiceCloseReception           = errors.Join(errReception, errors.New("close failed"))
+	ErrAvitoServiceCloseReceptionFindActive = errors.Join(
+		errAvitoServiceCloseReception,
+		errors.New("find active failed"),
+	)
+	ErrAvitoServiceCloseReception = errors.Join(
+		errAvitoServiceCloseReception,
+		errors.New("close failed"),
+	)
 
-	errProduct                             = errors.New("products service error")
-	ErrAvitoServiceProductInvalidPVZID     = errors.Join(errProduct, errors.New("invalid pvz id"))
-	errAvitoServiceCreateProduct           = errors.Join(errProduct, errors.New("create product failed"))
-	ErrAvitoServiceCreateProduct           = errors.Join(errAvitoServiceCreateProduct, errors.New("create product failed"))
-	ErrAvitoServiceCreateProductFindActive = errors.Join(errAvitoServiceCreateProduct, errors.New("find active failed"))
-	errAvitoServiceDeleteProduct           = errors.Join(errProduct, errors.New("delete product failed"))
-	ErrAvitoServiceDeleteProduct           = errors.Join(errAvitoServiceDeleteProduct, errors.New("delete product failed"))
-	ErrAvitoServiceDeleteProductFindActive = errors.Join(errAvitoServiceDeleteProduct, errors.New("find active failed"))
+	errProduct                         = errors.New("products service error")
+	ErrAvitoServiceProductInvalidPVZID = errors.Join(errProduct, errors.New("invalid pvz id"))
+	errAvitoServiceCreateProduct       = errors.Join(
+		errProduct,
+		errors.New("create product failed"),
+	)
+	ErrAvitoServiceCreateProduct = errors.Join(
+		errAvitoServiceCreateProduct,
+		errors.New("create product failed"),
+	)
+	ErrAvitoServiceCreateProductFindActive = errors.Join(
+		errAvitoServiceCreateProduct,
+		errors.New("find active failed"),
+	)
+	errAvitoServiceDeleteProduct = errors.Join(
+		errProduct,
+		errors.New("delete product failed"),
+	)
+	ErrAvitoServiceDeleteProduct = errors.Join(
+		errAvitoServiceDeleteProduct,
+		errors.New("delete product failed"),
+	)
+	ErrAvitoServiceDeleteProductFindActive = errors.Join(
+		errAvitoServiceDeleteProduct,
+		errors.New("find active failed"),
+	)
 )
 
 type ReceptionService struct {
@@ -36,7 +72,11 @@ type ReceptionService struct {
 	productRepo   ProductsRepository
 }
 
-func NewReceptionService(provider ConnectionProvider, receptionRepo ReceptionsRepository, productRepo ProductsRepository) *ReceptionService {
+func NewReceptionService(
+	provider ConnectionProvider,
+	receptionRepo ReceptionsRepository,
+	productRepo ProductsRepository,
+) *ReceptionService {
 	return &ReceptionService{
 		provider:      provider,
 		receptionRepo: receptionRepo,
@@ -51,7 +91,11 @@ func validPVZID(id PVZID) error {
 	return nil
 }
 
-func (s *ReceptionService) Create(ctx context.Context, authUser AuthenticatedUser, pvzID PVZID) (Reception, error) {
+func (s *ReceptionService) Create(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	pvzID PVZID,
+) (Reception, error) {
 	//* Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может инициировать приём товара.
 	var reception Reception
 
@@ -80,7 +124,11 @@ func (s *ReceptionService) Create(ctx context.Context, authUser AuthenticatedUse
 	return reception, nil
 }
 
-func (s *ReceptionService) Close(ctx context.Context, authUser AuthenticatedUser, pvzID PVZID) (Reception, error) {
+func (s *ReceptionService) Close(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	pvzID PVZID,
+) (Reception, error) {
 	var reception Reception
 
 	errValidID := validPVZID(pvzID)
@@ -105,7 +153,12 @@ func (s *ReceptionService) Close(ctx context.Context, authUser AuthenticatedUser
 	return reception, nil
 }
 
-func (s *ReceptionService) CreateProduct(ctx context.Context, authUser AuthenticatedUser, pvzID PVZID, productType ProductType) (Product, error) {
+func (s *ReceptionService) CreateProduct(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	pvzID PVZID,
+	productType ProductType,
+) (Product, error) {
 	/* * Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может добавлять товары после его осмотра.
 	 * Если же нет новой незакрытой приёмки товаров, то в таком случае должна возвращаться ошибка, и товар не должен добавляться в систему.*/
 	var product Product
@@ -141,7 +194,11 @@ func (s *ReceptionService) CreateProduct(ctx context.Context, authUser Authentic
 	return product, nil
 }
 
-func (s *ReceptionService) DeleteLastProduct(ctx context.Context, authUser AuthenticatedUser, pvzID PVZID) error {
+func (s *ReceptionService) DeleteLastProduct(
+	ctx context.Context,
+	authUser AuthenticatedUser,
+	pvzID PVZID,
+) error {
 	/* * Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может удалять товары, которые были добавленыв рамках текущей приёмки на ПВЗ.*/
 	errValidID := validPVZID(pvzID)
 	if errValidID != nil {

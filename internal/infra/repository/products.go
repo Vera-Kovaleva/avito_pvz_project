@@ -35,7 +35,14 @@ func (p *Product) Create(
 	values
     ($1, $2, $3, $4)`
 
-	_, err := connection.ExecContext(ctx, query, product.ID, product.ReceptionID, product.Type, product.CreatedAt)
+	_, err := connection.ExecContext(
+		ctx,
+		query,
+		product.ID,
+		product.ReceptionID,
+		product.Type,
+		product.CreatedAt,
+	)
 	if err != nil {
 		return errors.Join(ErrCreateProduct, err)
 	}
@@ -69,7 +76,6 @@ func (p *Product) Search(
 	page *int,
 	limit *int,
 ) ([]domain.Product, error) {
-
 	if from != nil && to != nil && to.Before(*from) {
 		return nil, errors.Join(ErrSearchProduct, errors.New("from must be less than to"))
 	}
@@ -123,5 +129,4 @@ func (p *Product) Search(
 		return nil, errors.Join(ErrSearchProduct, err)
 	}
 	return products, nil
-
 }

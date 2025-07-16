@@ -1,11 +1,12 @@
 package domain_test
 
 import (
-	"avito_pvz/internal/domain"
-	"avito_pvz/internal/generated/mocks"
 	"context"
 	"errors"
 	"testing"
+
+	"avito_pvz/internal/domain"
+	"avito_pvz/internal/generated/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -20,7 +21,7 @@ func TestServiceReception_Create(t *testing.T) {
 		ID:    domain.ReceptionID(uuid.New()),
 		PVZID: pvzID,
 	}
-	var invalidPVZID = domain.PVZID(uuid.Nil)
+	invalidPVZID := domain.PVZID(uuid.Nil)
 
 	tests := []struct {
 		name         string
@@ -38,12 +39,14 @@ func TestServiceReception_Create(t *testing.T) {
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, pvzID).
@@ -63,7 +66,8 @@ func TestServiceReception_Create(t *testing.T) {
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("some error")).Once()
 			},
@@ -82,12 +86,14 @@ func TestServiceReception_Create(t *testing.T) {
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, pvzID).
@@ -124,7 +130,8 @@ func TestServiceReception_Create(t *testing.T) {
 				test.prepareMocks(provider, repoReception)
 			}
 
-			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).Create(t.Context(), test.authUser, test.pvzID)
+			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+				Create(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, reception, err)
 		})
@@ -139,7 +146,7 @@ func TestServiceReception_Close(t *testing.T) {
 		ID:    domain.ReceptionID(uuid.New()),
 		PVZID: pvzID,
 	}
-	var invalidPVZID = domain.PVZID(uuid.Nil)
+	invalidPVZID := domain.PVZID(uuid.Nil)
 
 	tests := []struct {
 		name         string
@@ -157,12 +164,14 @@ func TestServiceReception_Close(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repo.EXPECT().Close(mock.Anything, mock.Anything, reception.ID).
@@ -182,7 +191,8 @@ func TestServiceReception_Close(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, errors.New("some error")).Once()
 			},
@@ -201,12 +211,14 @@ func TestServiceReception_Close(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repo.EXPECT().Close(mock.Anything, mock.Anything, reception.ID).
@@ -243,7 +255,8 @@ func TestServiceReception_Close(t *testing.T) {
 				test.prepareMocks(provider, repoReception)
 			}
 
-			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).Close(t.Context(), test.authUser, test.pvzID)
+			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+				Close(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, reception, err)
 		})
@@ -260,7 +273,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 		Status: domain.InProgress,
 	}
 
-	var invalidPVZID = domain.PVZID(uuid.Nil)
+	invalidPVZID := domain.PVZID(uuid.Nil)
 
 	tests := []struct {
 		name         string
@@ -279,12 +292,14 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repoProduct.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
@@ -303,7 +318,8 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, errors.New("some error")).Once()
 			},
@@ -322,12 +338,14 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repoProduct.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
@@ -364,7 +382,8 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 				test.prepareMocks(provider, repoReception, repoProduct)
 			}
 
-			product, err := domain.NewReceptionService(provider, repoReception, repoProduct).CreateProduct(t.Context(), test.authUser, test.pvzID, test.productType)
+			product, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+				CreateProduct(t.Context(), test.authUser, test.pvzID, test.productType)
 
 			test.check(t, product, err)
 		})
@@ -381,7 +400,7 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 		Status: domain.InProgress,
 	}
 
-	var invalidPVZID = domain.PVZID(uuid.Nil)
+	invalidPVZID := domain.PVZID(uuid.Nil)
 
 	tests := []struct {
 		name         string
@@ -400,12 +419,14 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repoProduct.EXPECT().DeleteLast(mock.Anything, mock.Anything, mock.Anything).
@@ -424,7 +445,8 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, errors.New("some error")).Once()
 			},
@@ -443,12 +465,14 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
 						return f(ctx, &mocks.MockConnection{})
-					}).Once()
+					}).
+					Once()
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repoProduct.EXPECT().DeleteLast(mock.Anything, mock.Anything, mock.Anything).
@@ -485,7 +509,8 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 				test.prepareMocks(provider, repoReception, repoProduct)
 			}
 
-			err := domain.NewReceptionService(provider, repoReception, repoProduct).DeleteLastProduct(t.Context(), test.authUser, test.pvzID)
+			err := domain.NewReceptionService(provider, repoReception, repoProduct).
+				DeleteLastProduct(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, err)
 		})

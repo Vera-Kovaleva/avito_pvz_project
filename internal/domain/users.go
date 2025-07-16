@@ -27,7 +27,14 @@ type UserService struct {
 	authenticateByToken    func(string) (AuthenticatedUser, error)
 }
 
-func NewUserService(provider ConnectionProvider, userRepo UsersRepository, hashPassword func(string) (string, error), compareHashAndPassword func(string, string) error, generateToken func(UserID, UserRole) (string, error), authenticateByToken func(string) (AuthenticatedUser, error)) *UserService {
+func NewUserService(
+	provider ConnectionProvider,
+	userRepo UsersRepository,
+	hashPassword func(string) (string, error),
+	compareHashAndPassword func(string, string) error,
+	generateToken func(UserID, UserRole) (string, error),
+	authenticateByToken func(string) (AuthenticatedUser, error),
+) *UserService {
 	return &UserService{
 		provider:               provider,
 		userRepo:               userRepo,
@@ -38,10 +45,15 @@ func NewUserService(provider ConnectionProvider, userRepo UsersRepository, hashP
 	}
 }
 
-//откуда generate token ??
+// откуда generate token ??
 // login by token все??
 
-func (s *UserService) Create(ctx context.Context, email string, password string, userRole UserRole) (User, error) {
+func (s *UserService) Create(
+	ctx context.Context,
+	email string,
+	password string,
+	userRole UserRole,
+) (User, error) {
 	var user User
 	var err error
 
@@ -78,7 +90,11 @@ func (s *UserService) Create(ctx context.Context, email string, password string,
 	return user, nil
 }
 
-func (s *UserService) FindTokenByEmailAndPassword(ctx context.Context, email string, passwordHash string) (string, error) {
+func (s *UserService) FindTokenByEmailAndPassword(
+	ctx context.Context,
+	email string,
+	passwordHash string,
+) (string, error) {
 	var user User
 	err := s.provider.Execute(ctx, func(ctx context.Context, connection Connection) error {
 		var err error
@@ -99,7 +115,6 @@ func (s *UserService) FindTokenByEmailAndPassword(ctx context.Context, email str
 
 func (s *UserService) LoginByToken(ctx context.Context, token string) (AuthenticatedUser, error) {
 	authUser, err := s.authenticateByToken(token)
-
 	if err != nil {
 		return nil, errors.Join(ErrInvalidToken, err)
 	}

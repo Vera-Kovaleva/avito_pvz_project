@@ -1,14 +1,15 @@
 package domain_test
 
 import (
-	"avito_pvz/internal/domain"
-	"avito_pvz/internal/generated/mocks"
-	"avito_pvz/internal/infra/pointer"
 	"context"
 	"errors"
 	"slices"
 	"testing"
 	"time"
+
+	"avito_pvz/internal/domain"
+	"avito_pvz/internal/generated/mocks"
+	"avito_pvz/internal/infra/pointer"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -76,7 +77,8 @@ func TestServicePVZ_Create(t *testing.T) {
 				}).
 				Once()
 
-			pvz, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).Create(t.Context(), test.authUser, test.pvzCity)
+			pvz, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				Create(t.Context(), test.authUser, test.pvzCity)
 
 			test.check(t, pvz, err)
 		})
@@ -140,7 +142,8 @@ func TestServicePVZ_FindAll(t *testing.T) {
 				}).
 				Once()
 
-			pvzs, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).FindAll(t.Context())
+			pvzs, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				FindAll(t.Context())
 			test.check(t, pvzs, err)
 		})
 	}
@@ -179,7 +182,12 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				pvzRepo *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{
-					{ID: productID1, ReceptionID: receptionID1, Type: "electronics", CreatedAt: now},
+					{
+						ID:          productID1,
+						ReceptionID: receptionID1,
+						Type:        "electronics",
+						CreatedAt:   now,
+					},
 				}
 				productRepo.EXPECT().
 					Search(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -226,8 +234,18 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				pvzRepo *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{
-					{ID: productID1, ReceptionID: receptionID1, Type: "электроника", CreatedAt: now},
-					{ID: productID2, ReceptionID: receptionID1, Type: "одежда", CreatedAt: now.Add(-2 * time.Hour)},
+					{
+						ID:          productID1,
+						ReceptionID: receptionID1,
+						Type:        "электроника",
+						CreatedAt:   now,
+					},
+					{
+						ID:          productID2,
+						ReceptionID: receptionID1,
+						Type:        "одежда",
+						CreatedAt:   now.Add(-2 * time.Hour),
+					},
 				}
 				productRepo.EXPECT().
 					Search(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -281,8 +299,18 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				pvzRepo *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{
-					{ID: productID2, ReceptionID: receptionID1, Type: "одежда", CreatedAt: now.Add(-2 * time.Hour)},
-					{ID: productID1, ReceptionID: receptionID1, Type: "электроника", CreatedAt: now},
+					{
+						ID:          productID2,
+						ReceptionID: receptionID1,
+						Type:        "одежда",
+						CreatedAt:   now.Add(-2 * time.Hour),
+					},
+					{
+						ID:          productID1,
+						ReceptionID: receptionID1,
+						Type:        "электроника",
+						CreatedAt:   now,
+					},
 				}
 				productRepo.EXPECT().
 					Search(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -290,7 +318,12 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 					Once()
 
 				receptions := []domain.Reception{
-					{ID: receptionID1, PVZID: pvzID1, Status: domain.Close, CreatedAt: now.Add(-2 * time.Hour)},
+					{
+						ID:        receptionID1,
+						PVZID:     pvzID1,
+						Status:    domain.Close,
+						CreatedAt: now.Add(-2 * time.Hour),
+					},
 					{ID: receptionID2, PVZID: pvzID1, Status: domain.InProgress, CreatedAt: now},
 				}
 				receptionRepo.EXPECT().
@@ -342,8 +375,18 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				pvzRepo *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{
-					{ID: productID2, ReceptionID: receptionID1, Type: "одежда", CreatedAt: now.Add(-2 * time.Hour)},
-					{ID: productID1, ReceptionID: receptionID1, Type: "электроника", CreatedAt: now},
+					{
+						ID:          productID2,
+						ReceptionID: receptionID1,
+						Type:        "одежда",
+						CreatedAt:   now.Add(-2 * time.Hour),
+					},
+					{
+						ID:          productID1,
+						ReceptionID: receptionID1,
+						Type:        "электроника",
+						CreatedAt:   now,
+					},
 				}
 				productRepo.EXPECT().
 					Search(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -351,7 +394,12 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 					Once()
 
 				receptions := []domain.Reception{
-					{ID: receptionID1, PVZID: pvzID1, Status: domain.Close, CreatedAt: now.Add(-2 * time.Hour)},
+					{
+						ID:        receptionID1,
+						PVZID:     pvzID1,
+						Status:    domain.Close,
+						CreatedAt: now.Add(-2 * time.Hour),
+					},
 					{ID: receptionID2, PVZID: pvzID1, Status: domain.InProgress, CreatedAt: now},
 				}
 				receptionRepo.EXPECT().
@@ -417,7 +465,8 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				}).
 				Times(3)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
 	}
@@ -482,7 +531,8 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrProducts(t *testing.T) {
 				}).
 				Once()
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
 	}
@@ -553,7 +603,8 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 				}).
 				Times(2)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
 	}
@@ -632,7 +683,8 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 				}).
 				Times(3)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
 	}

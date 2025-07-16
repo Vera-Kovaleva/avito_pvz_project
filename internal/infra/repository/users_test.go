@@ -24,7 +24,15 @@ func TestUserIntegration(t *testing.T) {
 
 		_ = fixtureCreatePVZ(ctx, t, connection, pvzID, "Казань")
 		_ = fixtureCreateReceptin(ctx, t, connection, receptionID, pvzID)
-		_ = fixtureCreateProduct(ctx, t, connection, productID, receptionID, "электроника", time.Now())
+		_ = fixtureCreateProduct(
+			ctx,
+			t,
+			connection,
+			productID,
+			receptionID,
+			"электроника",
+			time.Now(),
+		)
 
 		users := repository.NewUsers()
 
@@ -59,7 +67,8 @@ func TestUserIntegration(t *testing.T) {
 func TestUserUnitCreate(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
-	connection.EXPECT().ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	connection.EXPECT().
+		ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(0, errors.New("some error")).
 		Once()
 
@@ -83,7 +92,8 @@ func TestUserUnitReadByEmail(t *testing.T) {
 func TestUserUnitUpdate(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
-	connection.EXPECT().ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	connection.EXPECT().
+		ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(0, errors.New("some error")).
 		Once()
 
@@ -95,7 +105,8 @@ func TestUserUnitUpdate(t *testing.T) {
 func TestUserUnitUpdateTokenByEmail(t *testing.T) {
 	connection := mocks.NewMockConnection(t)
 
-	connection.EXPECT().ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+	connection.EXPECT().
+		ExecContext(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(0, errors.New("some error")).
 		Once()
 
@@ -104,7 +115,13 @@ func TestUserUnitUpdateTokenByEmail(t *testing.T) {
 	require.ErrorContains(t, err, "some error")
 }
 
-func fixtureCreateUser(ctx context.Context, t *testing.T, connection domain.Connection, id domain.UserID, role domain.UserRole) domain.User {
+func fixtureCreateUser(
+	ctx context.Context,
+	t *testing.T,
+	connection domain.Connection,
+	id domain.UserID,
+	role domain.UserRole,
+) domain.User {
 	user := domain.User{
 		ID:           id,
 		Role:         role,

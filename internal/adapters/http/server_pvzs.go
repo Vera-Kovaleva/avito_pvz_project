@@ -31,5 +31,12 @@ func (s *Server) GetPvz(
 	ctx context.Context,
 	request oapi.GetPvzRequestObject,
 ) (oapi.GetPvzResponseObject, error) {
+	pvzReceptionsProducts, err := s.pvzs.FindPVZReceptionProducts(ctx, nil, request.Params.StartDate, request.Params.EndDate, request.Params.Page, request.Params.Limit)
+	if err != nil {
+		return oapi.GetPvz200JSONResponse{}, nil
+	}
+
+	_ = pvzReceptionsProducts[0]
+
 	return oapi.GetPvz200JSONResponse{}, nil
 }

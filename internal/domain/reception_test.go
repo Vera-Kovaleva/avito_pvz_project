@@ -16,12 +16,12 @@ import (
 func TestServiceReception_Create(t *testing.T) {
 	t.Parallel()
 
-	pvzID := domain.PVZID(uuid.New())
+	pvzID := uuid.New()
 	reception := domain.Reception{
-		ID:    domain.ReceptionID(uuid.New()),
+		ID:    uuid.New(),
 		PVZID: pvzID,
 	}
-	invalidPVZID := domain.PVZID(uuid.Nil)
+	invalidPVZID := uuid.Nil
 
 	tests := []struct {
 		name         string
@@ -71,7 +71,7 @@ func TestServiceReception_Create(t *testing.T) {
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, reception domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "create failed")
@@ -99,7 +99,7 @@ func TestServiceReception_Create(t *testing.T) {
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, pvzID).
 					Return(reception, errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, reception domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "find active failed")
@@ -109,9 +109,9 @@ func TestServiceReception_Create(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository) {
 			},
-			check: func(t *testing.T, r domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "invalid pvz id")
 			},
@@ -130,10 +130,10 @@ func TestServiceReception_Create(t *testing.T) {
 				test.prepareMocks(provider, repoReception)
 			}
 
-			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
 				Create(t.Context(), test.authUser, test.pvzID)
 
-			test.check(t, reception, err)
+			test.check(t, testReception, err)
 		})
 	}
 }
@@ -141,12 +141,12 @@ func TestServiceReception_Create(t *testing.T) {
 func TestServiceReception_Close(t *testing.T) {
 	t.Parallel()
 
-	pvzID := domain.PVZID(uuid.New())
+	pvzID := uuid.New()
 	reception := domain.Reception{
-		ID:    domain.ReceptionID(uuid.New()),
+		ID:    uuid.New(),
 		PVZID: pvzID,
 	}
-	invalidPVZID := domain.PVZID(uuid.Nil)
+	invalidPVZID := uuid.Nil
 
 	tests := []struct {
 		name         string
@@ -196,7 +196,7 @@ func TestServiceReception_Close(t *testing.T) {
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, reception domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "find active failed")
@@ -224,7 +224,7 @@ func TestServiceReception_Close(t *testing.T) {
 				repo.EXPECT().Close(mock.Anything, mock.Anything, reception.ID).
 					Return(errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, reception domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "close failed")
@@ -234,9 +234,9 @@ func TestServiceReception_Close(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository) {
 			},
-			check: func(t *testing.T, r domain.Reception, err error) {
+			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "invalid pvz id")
 			},
@@ -255,10 +255,10 @@ func TestServiceReception_Close(t *testing.T) {
 				test.prepareMocks(provider, repoReception)
 			}
 
-			reception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
 				Close(t.Context(), test.authUser, test.pvzID)
 
-			test.check(t, reception, err)
+			test.check(t, testReception, err)
 		})
 	}
 }
@@ -266,14 +266,14 @@ func TestServiceReception_Close(t *testing.T) {
 func TestServiceReception_CreateProduct(t *testing.T) {
 	t.Parallel()
 
-	pvzID := domain.PVZID(uuid.New())
+	pvzID := uuid.New()
 	reception := domain.Reception{
-		ID:     domain.ReceptionID(uuid.New()),
+		ID:     uuid.New(),
 		PVZID:  pvzID,
 		Status: domain.InProgress,
 	}
 
-	invalidPVZID := domain.PVZID(uuid.Nil)
+	invalidPVZID := uuid.Nil
 
 	tests := []struct {
 		name         string
@@ -305,7 +305,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 				repoProduct.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).Once()
 			},
-			check: func(t *testing.T, product domain.Product, err error) {
+			check: func(t *testing.T, _ domain.Product, err error) {
 				require.NoError(t, err)
 			},
 		},
@@ -313,7 +313,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 			name:     "Find active Error",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -323,7 +323,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, product domain.Product, err error) {
+			check: func(t *testing.T, _ domain.Product, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "find active failed")
@@ -351,7 +351,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 				repoProduct.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("some error")).Once()
 			},
-			check: func(t *testing.T, product domain.Product, err error) {
+			check: func(t *testing.T, _ domain.Product, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "create product failed")
@@ -361,9 +361,9 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
 			},
-			check: func(t *testing.T, product domain.Product, err error) {
+			check: func(t *testing.T, _ domain.Product, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "invalid pvz id")
 			},
@@ -393,14 +393,14 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 func TestServiceReception_DeleteLastProduct(t *testing.T) {
 	t.Parallel()
 
-	pvzID := domain.PVZID(uuid.New())
+	pvzID := uuid.New()
 	reception := domain.Reception{
-		ID:     domain.ReceptionID(uuid.New()),
+		ID:     uuid.New(),
 		PVZID:  pvzID,
 		Status: domain.InProgress,
 	}
 
-	invalidPVZID := domain.PVZID(uuid.Nil)
+	invalidPVZID := uuid.Nil
 
 	tests := []struct {
 		name         string
@@ -440,7 +440,7 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 			name:     "Find active Error",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -488,7 +488,7 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
 			},
 			check: func(t *testing.T, err error) {
 				require.Error(t, err)

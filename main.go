@@ -22,7 +22,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
+
+	m "avito_pvz/internal/infra/metrics"
 )
 
 const (
@@ -92,10 +96,33 @@ func Run(ctx context.Context) int {
 		repository.NewProduct(),
 	)
 
-	oapi.RegisterHandlers(router, oapi.NewStrictHandler(httpapi.NewServer(pvzService, receptionsService, usersService), nil))
+	middlewares := []oapi.StrictMiddlewareFunc{
+		func(f strictgin.StrictGinHandlerFunc, _ string) strictgin.StrictGinHandlerFunc {
+			return func(ctx *gin.Context, request any) (response any, err error) {
+				start := time.Now()
+
+				response, err = f(ctx, request)
+
+				metrix := m.NewMetrics()
+				metrix.RequestsMetrics(time.Since(start))
+
+				return response, err
+			}
+		},
+	}
+
+	oapi.RegisterHandlers(
+		router,
+		oapi.NewStrictHandler(
+			httpapi.NewServer(pvzService, receptionsService, usersService),
+			middlewares,
+		),
+	)
 
 	var eg errgroup.Group
 	startHTTPServer(ctx, &eg, router)
+	startPrometeusServer(ctx, &eg)
+
 	if err := eg.Wait(); err != nil {
 		slog.ErrorContext(ctx, "Runing servers failed.", log.ErrorAttr(err))
 
@@ -125,5 +152,34 @@ func startHTTPServer(ctx context.Context, eg *errgroup.Group, router *gin.Engine
 		<-ctx.Done()
 
 		return httpSrv.Shutdown(ctx)
+	})
+}
+
+func startPrometeusServer(ctx context.Context, eg *errgroup.Group) {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	metricsSrv := &http.Server{
+		Addr:              ":9000",
+		Handler:           mux,
+		ReadTimeout:       readimeout,
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+	eg.Go(func() error {
+		slog.InfoContext(
+			ctx,
+			"Starting Prometheus metrics server",
+			slog.String("addr", metricsSrv.Addr),
+		)
+		err := metricsSrv.ListenAndServe()
+		if errors.Is(err, http.ErrServerClosed) {
+			err = nil
+		}
+		return err
+	})
+	eg.Go(func() error {
+		<-ctx.Done()
+
+		return metricsSrv.Shutdown(ctx)
 	})
 }

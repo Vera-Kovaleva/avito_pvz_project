@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	m "avito_pvz/internal/infra/metrics"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -45,9 +47,6 @@ func NewUserService(
 	}
 }
 
-// откуда generate token ??
-// login by token все??
-
 func (s *UserService) Create(
 	ctx context.Context,
 	email string,
@@ -62,7 +61,7 @@ func (s *UserService) Create(
 		return user, errors.Join(ErrAvitoServiceCreateUser, err)
 	}
 
-	userID := UserID(uuid.New())
+	userID := uuid.New()
 
 	token, err := s.generateToken(userID, userRole)
 	if err != nil {
@@ -86,6 +85,9 @@ func (s *UserService) Create(
 	if err != nil {
 		return user, errors.Join(ErrAvitoServiceCreateUser, err)
 	}
+
+	metrix := m.NewMetrics()
+	metrix.UsersMetrics()
 
 	return user, nil
 }
@@ -113,7 +115,7 @@ func (s *UserService) FindTokenByEmailAndPassword(
 	return user.Token, nil
 }
 
-func (s *UserService) LoginByToken(ctx context.Context, token string) (AuthenticatedUser, error) {
+func (s *UserService) LoginByToken(_ context.Context, token string) (AuthenticatedUser, error) {
 	authUser, err := s.authenticateByToken(token)
 	if err != nil {
 		return nil, errors.Join(ErrInvalidToken, err)

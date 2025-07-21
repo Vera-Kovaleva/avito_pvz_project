@@ -30,7 +30,7 @@ func TestServicePVZ_Create(t *testing.T) {
 			name:     "Success",
 			authUser: nil,
 			pvzCity:  domain.Kzn,
-			prepareMocks: func(connection *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).
 					Once()
@@ -44,12 +44,12 @@ func TestServicePVZ_Create(t *testing.T) {
 			name:     "DB Error",
 			authUser: nil,
 			pvzCity:  domain.Kzn,
-			prepareMocks: func(connection *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("some error")).
 					Once()
 			},
-			check: func(t *testing.T, pvz domain.PVZ, err error) {
+			check: func(t *testing.T, _ domain.PVZ, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 			},
@@ -88,7 +88,7 @@ func TestServicePVZ_Create(t *testing.T) {
 func TestServicePVZ_FindAll(t *testing.T) {
 	t.Parallel()
 
-	pvzID := domain.PVZID(uuid.New())
+	pvzID := uuid.New()
 
 	tests := []struct {
 		name         string
@@ -98,7 +98,7 @@ func TestServicePVZ_FindAll(t *testing.T) {
 	}{
 		{
 			name: "Success",
-			prepareMocks: func(connection *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
 				repo.EXPECT().FindAll(mock.Anything, mock.Anything).
 					Return([]domain.PVZ{{ID: pvzID, City: domain.Kzn}}, nil).
 					Once()
@@ -111,12 +111,12 @@ func TestServicePVZ_FindAll(t *testing.T) {
 		},
 		{
 			name: "DB error",
-			prepareMocks: func(conn *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
 				repo.EXPECT().FindAll(mock.Anything, mock.Anything).
 					Return(nil, errors.New("some error")).
 					Once()
 			},
-			check: func(t *testing.T, pvzs []domain.PVZ, err error) {
+			check: func(t *testing.T, _ []domain.PVZ, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 			},
@@ -153,12 +153,9 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	pvzID1 := domain.PVZID(uuid.New())
-	pvzID2 := domain.PVZID(uuid.New())
-	receptionID1 := domain.ReceptionID(uuid.New())
-	receptionID2 := domain.ReceptionID(uuid.New())
-	productID1 := domain.ProductID(uuid.New())
-	productID2 := domain.ProductID(uuid.New())
+	pvzID1, pvzID2 := uuid.New(), uuid.New()
+	receptionID1, receptionID2 := uuid.New(), uuid.New()
+	productID1, productID2 := uuid.New(), uuid.New()
 
 	tests := []struct {
 		name         string
@@ -176,7 +173,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 			page:     pointer.Ref(1),
 			limit:    pointer.Ref(10),
 			prepareMocks: func(
-				conn *mocks.MockConnection,
+				_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
 				pvzRepo *mocks.MockPVZsRepository,
@@ -228,7 +225,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 			page:     pointer.Ref(1),
 			limit:    pointer.Ref(10),
 			prepareMocks: func(
-				conn *mocks.MockConnection,
+				_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
 				pvzRepo *mocks.MockPVZsRepository,
@@ -293,7 +290,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 			page:     pointer.Ref(1),
 			limit:    pointer.Ref(10),
 			prepareMocks: func(
-				conn *mocks.MockConnection,
+				_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
 				pvzRepo *mocks.MockPVZsRepository,
@@ -369,7 +366,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 			page:     pointer.Ref(1),
 			limit:    pointer.Ref(10),
 			prepareMocks: func(
-				conn *mocks.MockConnection,
+				_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
 				pvzRepo *mocks.MockPVZsRepository,
@@ -493,10 +490,10 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrProducts(t *testing.T) {
 			page:     pointer.Ref(1),
 			limit:    pointer.Ref(10),
 			prepareMocks: func(
-				conn *mocks.MockConnection,
+				_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
-				receptionRepo *mocks.MockReceptionsRepository,
-				pvzRepo *mocks.MockPVZsRepository,
+				_ *mocks.MockReceptionsRepository,
+				_ *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{}
 				productRepo.EXPECT().
@@ -504,7 +501,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrProducts(t *testing.T) {
 					Return(products, errors.New("some error")).
 					Once()
 			},
-			check: func(t *testing.T, result []domain.PVZReceptionsProducts, err error) {
+			check: func(t *testing.T, _ []domain.PVZReceptionsProducts, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "search products failed")
@@ -542,9 +539,9 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	pvzID := domain.PVZID(uuid.New())
-	receptionID := domain.ReceptionID(uuid.New())
-	productID1 := domain.ProductID(uuid.New())
+	pvzID := uuid.New()
+	receptionID := uuid.New()
+	productID1 := uuid.New()
 
 	tests := []struct {
 		name         string
@@ -555,10 +552,10 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 		check        func(*testing.T, []domain.PVZReceptionsProducts, error)
 	}{
 		{
-			prepareMocks: func(conn *mocks.MockConnection,
+			prepareMocks: func(_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
-				pvzRepo *mocks.MockPVZsRepository,
+				_ *mocks.MockPVZsRepository,
 			) {
 				products := []domain.Product{
 					{ID: productID1, ReceptionID: receptionID, Type: "electronics", CreatedAt: now},
@@ -576,7 +573,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 					Return(receptions, errors.New("some error")).
 					Once()
 			},
-			check: func(t *testing.T, result []domain.PVZReceptionsProducts, err error) {
+			check: func(t *testing.T, _ []domain.PVZReceptionsProducts, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "search reseptions failed")
@@ -614,9 +611,9 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	pvzID := domain.PVZID(uuid.New())
-	receptionID := domain.ReceptionID(uuid.New())
-	productID1 := domain.ProductID(uuid.New())
+	pvzID := uuid.New()
+	receptionID := uuid.New()
+	productID1 := uuid.New()
 
 	tests := []struct {
 		name         string
@@ -627,7 +624,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 		check        func(*testing.T, []domain.PVZReceptionsProducts, error)
 	}{
 		{
-			prepareMocks: func(conn *mocks.MockConnection,
+			prepareMocks: func(_ *mocks.MockConnection,
 				productRepo *mocks.MockProductsRepository,
 				receptionRepo *mocks.MockReceptionsRepository,
 				pvzRepo *mocks.MockPVZsRepository,
@@ -656,7 +653,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 					Return(pvzs, errors.New("some error")).
 					Once()
 			},
-			check: func(t *testing.T, result []domain.PVZReceptionsProducts, err error) {
+			check: func(t *testing.T, _ []domain.PVZReceptionsProducts, err error) {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "some error")
 				require.Contains(t, err.Error(), "search pvzs failed")

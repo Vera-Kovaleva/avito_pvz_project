@@ -2,19 +2,20 @@ package http
 
 import (
 	"context"
-	"time"
 
 	"avito_pvz/internal/domain"
 	oapi "avito_pvz/internal/generated/oapi"
 	"avito_pvz/internal/infra/pointer"
 )
 
+//nolint:revive,staticcheck // Method name must comply with generated code naming requirements.
 func (s *Server) PostPvzPvzIdCloseLastReception(
 	ctx context.Context,
 	request oapi.PostPvzPvzIdCloseLastReceptionRequestObject,
 ) (oapi.PostPvzPvzIdCloseLastReceptionResponseObject, error) {
-	reception, err := s.receptions.Close(ctx, nil, domain.PVZID(request.PvzId))
+	reception, err := s.receptions.Close(ctx, nil, request.PvzId)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvzPvzIdCloseLastReception400JSONResponse{
 			Message: "Неверный запрос или приемка уже закрыта",
 		}, nil
@@ -24,17 +25,18 @@ func (s *Server) PostPvzPvzIdCloseLastReception(
 		Id:       pointer.Ref(reception.ID),
 		PvzId:    reception.PVZID,
 		Status:   oapi.ReceptionStatus(reception.Status),
-		DateTime: time.Time(reception.CreatedAt),
+		DateTime: reception.CreatedAt,
 	}, nil
 }
 
+//nolint:revive,staticcheck // Method name must comply with generated code naming requirements.
 func (s *Server) PostPvzPvzIdDeleteLastProduct(
 	ctx context.Context,
 	request oapi.PostPvzPvzIdDeleteLastProductRequestObject,
 ) (oapi.PostPvzPvzIdDeleteLastProductResponseObject, error) {
-	err := s.receptions.DeleteLastProduct(ctx, nil, domain.PVZID(request.PvzId))
-
+	err := s.receptions.DeleteLastProduct(ctx, nil, request.PvzId)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvzPvzIdDeleteLastProduct400JSONResponse{
 			Message: "Неверный запрос, нет активной приемки или нет товаров для удаления",
 		}, nil
@@ -43,13 +45,18 @@ func (s *Server) PostPvzPvzIdDeleteLastProduct(
 	return oapi.PostPvzPvzIdDeleteLastProduct200Response{}, nil
 }
 
-// PostProducts implements api.StrictServerInterface.
 func (s *Server) PostProducts(
 	ctx context.Context,
 	request oapi.PostProductsRequestObject,
 ) (oapi.PostProductsResponseObject, error) {
-	product, err := s.receptions.CreateProduct(ctx, nil, domain.PVZID(request.Body.PvzId), domain.ProductType(request.Body.Type))
+	product, err := s.receptions.CreateProduct(
+		ctx,
+		nil,
+		request.Body.PvzId,
+		domain.ProductType(request.Body.Type),
+	)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostProducts400JSONResponse{
 			Message: "Неверный запрос или нет активной приемки",
 		}, nil
@@ -62,13 +69,13 @@ func (s *Server) PostProducts(
 	}, nil
 }
 
-// PostReceptions implements api.StrictServerInterface.
 func (s *Server) PostReceptions(
 	ctx context.Context,
 	request oapi.PostReceptionsRequestObject,
 ) (oapi.PostReceptionsResponseObject, error) {
-	reception, err := s.receptions.Create(ctx, nil, domain.PVZID(request.Body.PvzId))
+	reception, err := s.receptions.Create(ctx, nil, request.Body.PvzId)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostReceptions400JSONResponse{
 			Message: "Неверный запрос или есть незакрытая приемка",
 		}, nil

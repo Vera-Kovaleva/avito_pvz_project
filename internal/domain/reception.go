@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	m "avito_pvz/internal/infra/metrics"
+
 	"github.com/google/uuid"
 )
 
@@ -85,7 +87,7 @@ func NewReceptionService(
 }
 
 func validPVZID(id PVZID) error {
-	if uuid.UUID(id) == uuid.Nil || uuid.Validate(id.String()) != nil {
+	if id == uuid.Nil || uuid.Validate(id.String()) != nil {
 		return errors.New("uuid is not valid")
 	}
 	return nil
@@ -96,7 +98,7 @@ func (s *ReceptionService) Create(
 	authUser AuthenticatedUser,
 	pvzID PVZID,
 ) (Reception, error) {
-	//* Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может инициировать приём товара.
+	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может инициировать приём товара.
 	var reception Reception
 
 	errValidID := validPVZID(pvzID)
@@ -106,7 +108,7 @@ func (s *ReceptionService) Create(
 
 	err := s.provider.ExecuteTx(ctx, func(ctx context.Context, c Connection) error {
 		reception = Reception{
-			ID:    ReceptionID(uuid.New()),
+			ID:    uuid.New(),
 			PVZID: pvzID,
 		}
 		return s.receptionRepo.Create(ctx, c, reception)
@@ -121,6 +123,10 @@ func (s *ReceptionService) Create(
 	if err != nil {
 		return reception, errors.Join(ErrAvitoServiceCreateReceptionFindActive, err)
 	}
+
+	metrix := m.NewMetrics()
+	metrix.ReceptionsMetrics()
+
 	return reception, nil
 }
 
@@ -159,8 +165,8 @@ func (s *ReceptionService) CreateProduct(
 	pvzID PVZID,
 	productType ProductType,
 ) (Product, error) {
-	/* * Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может добавлять товары после его осмотра.
-	 * Если же нет новой незакрытой приёмки товаров, то в таком случае должна возвращаться ошибка, и товар не должен добавляться в систему.*/
+	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может добавлять товары после его осмотра.
+	// Если же нет новой незакрытой приёмки товаров, то в таком случае должна возвращаться ошибка, и товар не должен добавляться в систему.
 	var product Product
 
 	errValidID := validPVZID(pvzID)
@@ -180,7 +186,7 @@ func (s *ReceptionService) CreateProduct(
 	}
 	err = s.provider.ExecuteTx(ctx, func(ctx context.Context, c Connection) error {
 		product = Product{
-			ID:          ProductID(uuid.New()),
+			ID:          uuid.New(),
 			ReceptionID: reception.ID,
 			Type:        productType,
 			CreatedAt:   time.Now(),
@@ -191,6 +197,10 @@ func (s *ReceptionService) CreateProduct(
 	if err != nil {
 		return product, errors.Join(ErrAvitoServiceCreateProduct, err)
 	}
+
+	metrix := m.NewMetrics()
+	metrix.ProductsMetrics()
+
 	return product, nil
 }
 
@@ -199,7 +209,7 @@ func (s *ReceptionService) DeleteLastProduct(
 	authUser AuthenticatedUser,
 	pvzID PVZID,
 ) error {
-	/* * Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может удалять товары, которые были добавленыв рамках текущей приёмки на ПВЗ.*/
+	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может удалять товары, которые были добавленыв рамках текущей приёмки на ПВЗ.
 	errValidID := validPVZID(pvzID)
 	if errValidID != nil {
 		return errors.Join(errValidID, ErrAvitoServiceProductInvalidPVZID)

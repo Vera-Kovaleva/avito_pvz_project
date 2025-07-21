@@ -28,9 +28,9 @@ func TestReceptionIntegration(t *testing.T) {
 		receptionFound, err := repoReception.FindActive(ctx, connection, pvzID)
 
 		require.NoError(t, err)
-		require.Equal(t, receptionFound.ID, reception.ID)
-		require.Equal(t, receptionFound.PVZID, reception.PVZID)
-		require.Equal(t, receptionFound.Status, domain.InProgress)
+		require.Equal(t, reception.ID, receptionFound.ID)
+		require.Equal(t, reception.PVZID, receptionFound.PVZID)
+		require.Equal(t, domain.InProgress, receptionFound.Status)
 
 		_ = repoReception.Close(ctx, connection, receptionID)
 		_, err = repoReception.FindActive(ctx, connection, pvzID)
@@ -49,9 +49,9 @@ func TestReceptionIntegration(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, receptionsFoundByIDs, 2)
-		require.Equal(t, receptionsFoundByIDs[0].PVZID, reception2.PVZID)
-		require.Equal(t, receptionsFoundByIDs[0].Status, domain.Close)
-		require.Equal(t, receptionsFoundByIDs[1].Status, domain.InProgress)
+		require.Equal(t, reception2.PVZID, receptionsFoundByIDs[0].PVZID)
+		require.Equal(t, domain.Close, receptionsFoundByIDs[0].Status)
+		require.Equal(t, domain.InProgress, receptionsFoundByIDs[1].Status)
 	})
 }
 

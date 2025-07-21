@@ -31,8 +31,9 @@ func (u *authenticatedUser) GetUserRole() UserRole {
 }
 
 func AuthenticateByToken(token string) (AuthenticatedUser, error) {
+	partsCount := 2
 	parts := strings.Split(token, ":")
-	if len(parts) != 2 {
+	if len(parts) != partsCount {
 		return nil, errors.New("invalid token format")
 	}
 

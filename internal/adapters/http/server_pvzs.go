@@ -14,6 +14,7 @@ func (s *Server) PostPvz(
 ) (oapi.PostPvzResponseObject, error) {
 	pvz, err := s.pvzs.Create(ctx, nil, domain.PVZCity(request.Body.City))
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvz400JSONResponse{
 			Message: "Неверный запрос",
 		}, nil
@@ -26,17 +27,71 @@ func (s *Server) PostPvz(
 	}, nil
 }
 
-// GetPvz implements api.StrictServerInterface.
 func (s *Server) GetPvz(
 	ctx context.Context,
 	request oapi.GetPvzRequestObject,
 ) (oapi.GetPvzResponseObject, error) {
-	pvzReceptionsProducts, err := s.pvzs.FindPVZReceptionProducts(ctx, nil, request.Params.StartDate, request.Params.EndDate, request.Params.Page, request.Params.Limit)
+	all, err := s.pvzs.FindPVZReceptionProducts(
+		ctx,
+		nil,
+		request.Params.StartDate,
+		request.Params.EndDate,
+		request.Params.Page,
+		request.Params.Limit,
+	)
 	if err != nil {
-		return oapi.GetPvz200JSONResponse{}, nil
+		return nil, err
 	}
 
-	_ = pvzReceptionsProducts[0]
+	type RespReception = struct {
+		Products  *[]oapi.Product `json:"products,omitempty"`
+		Reception *oapi.Reception `json:"reception,omitempty"`
+	}
 
-	return oapi.GetPvz200JSONResponse{}, nil
+	type RespItem = struct {
+		Pvz        *oapi.PVZ        `json:"pvz,omitempty"`
+		Receptions *[]RespReception `json:"receptions,omitempty"`
+	}
+
+	var response oapi.GetPvz200JSONResponse
+
+	for _, pvzData := range all {
+		pvz := &oapi.PVZ{
+			Id:               pointer.Ref(pvzData.PVZ.ID),
+			City:             oapi.PVZCity(pvzData.PVZ.City),
+			RegistrationDate: pointer.Ref(pvzData.PVZ.RegisteredAt),
+		}
+
+		var receptions []RespReception
+		for _, receptionData := range pvzData.Receptions {
+			reception := &oapi.Reception{
+				DateTime: receptionData.Reception.CreatedAt,
+				Id:       pointer.Ref(receptionData.Reception.ID),
+				PvzId:    receptionData.Reception.PVZID,
+				Status:   oapi.ReceptionStatus(receptionData.Reception.Status),
+			}
+
+			var products []oapi.Product
+			for _, productData := range receptionData.Products {
+				products = append(products, oapi.Product{
+					DateTime:    pointer.Ref(productData.CreatedAt),
+					Id:          pointer.Ref(productData.ID),
+					ReceptionId: productData.ReceptionID,
+					Type:        oapi.ProductType(productData.Type),
+				})
+			}
+
+			receptions = append(receptions, RespReception{
+				Reception: reception,
+				Products:  pointer.Ref(products),
+			})
+		}
+
+		response = append(response, RespItem{
+			Pvz:        pvz,
+			Receptions: pointer.Ref(receptions),
+		})
+	}
+
+	return response, nil
 }

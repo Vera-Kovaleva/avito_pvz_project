@@ -60,7 +60,7 @@ func TestUserIntegration(t *testing.T) {
 		require.NoError(t, err)
 		userRead, err = users.ReadByEmail(ctx, connection, newUser.Email)
 		require.NoError(t, err)
-		require.Equal(t, userRead.Token, "some new new token")
+		require.Equal(t, "some new new token", userRead.Token)
 	})
 }
 

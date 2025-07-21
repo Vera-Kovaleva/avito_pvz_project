@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	m "avito_pvz/internal/infra/metrics"
+
 	"github.com/google/uuid"
 )
 
@@ -64,11 +66,11 @@ func (s *PVZService) Create(
 	authUser AuthenticatedUser,
 	pvzCity PVZCity,
 ) (PVZ, error) {
-	//* Только пользователь с ролью «модератор» может завести ПВЗ в системе.
+	// Только пользователь с ролью «модератор» может завести ПВЗ в системе.
 	var pvz PVZ
 	err := s.provider.ExecuteTx(ctx, func(ctx context.Context, c Connection) error {
 		pvz = PVZ{
-			ID:           PVZID(uuid.New()),
+			ID:           uuid.New(),
 			City:         pvzCity,
 			RegisteredAt: time.Now(),
 		}
@@ -78,6 +80,10 @@ func (s *PVZService) Create(
 	if err != nil {
 		return pvz, errors.Join(ErrAvitoServiceCreatePVZ, err)
 	}
+
+	metrix := m.NewMetrics()
+	metrix.PvzMetrics()
+
 	return pvz, nil
 }
 

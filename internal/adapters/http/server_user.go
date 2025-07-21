@@ -12,24 +12,32 @@ import (
 )
 
 func (s *Server) PostDummyLogin(
-	ctx context.Context,
+	_ context.Context,
 	request oapi.PostDummyLoginRequestObject,
 ) (oapi.PostDummyLoginResponseObject, error) {
-	return oapi.PostDummyLogin200JSONResponse(uuid.New().String() + ":" + string(request.Body.Role)), nil
+	return oapi.PostDummyLogin200JSONResponse(
+		uuid.New().String() + ":" + string(request.Body.Role),
+	), nil
 }
 
 func (s *Server) PostLogin(
 	ctx context.Context,
 	request oapi.PostLoginRequestObject,
 ) (oapi.PostLoginResponseObject, error) {
-	token, err := s.users.FindTokenByEmailAndPassword(ctx, request.Body.Password, string(request.Body.Email))
+	token, err := s.users.FindTokenByEmailAndPassword(
+		ctx,
+		request.Body.Password,
+		string(request.Body.Email),
+	)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostLogin401JSONResponse{
 			Message: "Неверные учетные данные",
 		}, nil
 	}
 	_, err = s.users.LoginByToken(ctx, token)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostLogin401JSONResponse{
 			Message: "Неверные учетные данные",
 		}, nil
@@ -41,9 +49,14 @@ func (s *Server) PostRegister(
 	ctx context.Context,
 	request oapi.PostRegisterRequestObject,
 ) (oapi.PostRegisterResponseObject, error) {
-	user, err := s.users.Create(ctx, request.Body.Password, string(request.Body.Email), domain.UserRole(request.Body.Role))
-
+	user, err := s.users.Create(
+		ctx,
+		request.Body.Password,
+		string(request.Body.Email),
+		domain.UserRole(request.Body.Role),
+	)
 	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostRegister400JSONResponse{
 			Message: "Неверный запрос",
 		}, nil

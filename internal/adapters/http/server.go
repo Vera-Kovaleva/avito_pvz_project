@@ -13,7 +13,11 @@ type Server struct {
 
 var _ oapi.StrictServerInterface = (*Server)(nil)
 
-func NewServer(pvzs domain.PVZsInterface, receptions domain.ReceptionsInterface, users domain.UsersInterface) *Server {
+func NewServer(
+	pvzs domain.PVZsInterface,
+	receptions domain.ReceptionsInterface,
+	users domain.UsersInterface,
+) *Server {
 	return &Server{
 		pvzs:       pvzs,
 		receptions: receptions,

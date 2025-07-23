@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	m "avito_pvz/internal/infra/metrics"
-
 	"github.com/google/uuid"
 )
 
@@ -45,6 +43,7 @@ type PVZService struct {
 	pvzRepo       PVZsRepository
 	productRepo   ProductsRepository
 	receptionRepo ReceptionsRepository
+	metrics       Metrics
 }
 
 func NewPVZService(
@@ -52,12 +51,14 @@ func NewPVZService(
 	pvzRepo PVZsRepository,
 	productRepo ProductsRepository,
 	receptionRepo ReceptionsRepository,
+	metrics Metrics,
 ) *PVZService {
 	return &PVZService{
 		provider:      provider,
 		pvzRepo:       pvzRepo,
 		productRepo:   productRepo,
 		receptionRepo: receptionRepo,
+		metrics:       metrics,
 	}
 }
 
@@ -66,7 +67,10 @@ func (s *PVZService) Create(
 	authUser AuthenticatedUser,
 	pvzCity PVZCity,
 ) (PVZ, error) {
-	// Только пользователь с ролью «модератор» может завести ПВЗ в системе.
+	if authUser == nil || authUser.GetUserRole() != Moderator {
+		return PVZ{}, ErrNotAuthorized
+	}
+
 	var pvz PVZ
 	err := s.provider.ExecuteTx(ctx, func(ctx context.Context, c Connection) error {
 		pvz = PVZ{
@@ -81,8 +85,7 @@ func (s *PVZService) Create(
 		return pvz, errors.Join(ErrAvitoServiceCreatePVZ, err)
 	}
 
-	metrix := m.NewMetrics()
-	metrix.PvzMetrics()
+	s.metrics.IncPVZs()
 
 	return pvz, nil
 }
@@ -109,6 +112,11 @@ func (s *PVZService) FindPVZReceptionProducts(
 	limit *int,
 ) ([]PVZReceptionsProducts, error) {
 	var result []PVZReceptionsProducts
+
+	if authUser == nil || authUser.GetUserRole() != Moderator ||
+		authUser.GetUserRole() != Employee {
+		return result, ErrNotAuthorized
+	}
 
 	var products []Product
 	var searchError error

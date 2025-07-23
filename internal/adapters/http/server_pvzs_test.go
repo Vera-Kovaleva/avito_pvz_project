@@ -23,13 +23,13 @@ func TestServer_PostPvz(t *testing.T) {
 	tests := []struct {
 		name         string
 		request      oapi.PostPvzRequestObject
-		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockPVZsRepository)
+		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockPVZsRepository, *mocks.MockMetrics)
 		check        func(*testing.T, oapi.PostPvzResponseObject, error)
 	}{
 		{
 			name:    "Success",
 			request: oapi.PostPvzRequestObject{Body: &oapi.PVZ{City: testCity}},
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockPVZsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -38,6 +38,8 @@ func TestServer_PostPvz(t *testing.T) {
 				repo.EXPECT().
 					Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
+
+				m.EXPECT().IncPVZs().Return().Once()
 			},
 			check: func(t *testing.T, response oapi.PostPvzResponseObject, err error) {
 				require.NoError(t, err)
@@ -51,7 +53,7 @@ func TestServer_PostPvz(t *testing.T) {
 		{
 			name:    "ServiceError",
 			request: oapi.PostPvzRequestObject{Body: &oapi.PVZ{City: testCity}},
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockPVZsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -82,13 +84,14 @@ func TestServer_PostPvz(t *testing.T) {
 			pvzRepo := mocks.NewMockPVZsRepository(t)
 			productRepo := mocks.NewMockProductsRepository(t)
 			receptionRepo := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
-				test.prepareMocks(conn, pvzRepo)
+				test.prepareMocks(conn, pvzRepo, metrics)
 			}
 
 			server := http.NewServer(
-				domain.NewPVZService(conn, pvzRepo, productRepo, receptionRepo),
+				domain.NewPVZService(conn, pvzRepo, productRepo, receptionRepo, metrics),
 				nil,
 				nil,
 			)

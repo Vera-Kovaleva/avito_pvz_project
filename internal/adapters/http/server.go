@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+
 	"avito_pvz/internal/domain"
 	oapi "avito_pvz/internal/generated/oapi"
 )
@@ -23,4 +25,14 @@ func NewServer(
 		receptions: receptions,
 		users:      users,
 	}
+}
+
+func (s *Server) GetCurrentUserFromCtx(ctx context.Context) domain.AuthenticatedUser {
+	authUser, ok := ctx.Value(domain.CtxCurUserKey).(domain.AuthenticatedUser)
+
+	if !ok {
+		return nil
+	}
+
+	return authUser
 }

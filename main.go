@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"avito_pvz/internal/domain"
 	"avito_pvz/internal/infra/database"
 	"avito_pvz/internal/infra/log"
+	"avito_pvz/internal/infra/metrics"
 	"avito_pvz/internal/infra/noerr"
 	"avito_pvz/internal/infra/repository"
 
@@ -25,8 +27,6 @@ import (
 	strictgin "github.com/oapi-codegen/runtime/strictmiddleware/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sync/errgroup"
-
-	m "avito_pvz/internal/infra/metrics"
 )
 
 const (
@@ -74,16 +74,20 @@ func Run(ctx context.Context) int {
 	)
 	defer provider.Close()
 
+	metrics := metrics.NewMetrics()
+
 	pvzService := domain.NewPVZService(
 		provider,
 		repository.NewPVZ(),
 		repository.NewProduct(),
 		repository.NewReceptions(),
+		metrics,
 	)
 
 	usersService := domain.NewUserService(
 		provider,
 		repository.NewUsers(),
+		metrics,
 		domain.HashPassword,
 		domain.CompareHashAndPassword,
 		domain.GenerateToken,
@@ -94,19 +98,32 @@ func Run(ctx context.Context) int {
 		provider,
 		repository.NewReceptions(),
 		repository.NewProduct(),
+		metrics,
 	)
 
 	middlewares := []oapi.StrictMiddlewareFunc{
 		func(f strictgin.StrictGinHandlerFunc, _ string) strictgin.StrictGinHandlerFunc {
-			return func(ctx *gin.Context, request any) (response any, err error) {
+			return func(ctx *gin.Context, request any) (any, error) {
+				reqToken := ctx.Request.Header.Get("Authorization")
+				if strings.HasPrefix(reqToken, "Bearer ") {
+					token := strings.TrimPrefix(reqToken, "Bearer ")
+
+					if user, err := domain.AuthenticateByToken(token); err == nil {
+						ctx.Set(domain.CtxCurUserKey, user)
+					}
+				}
+
+				return f(ctx, request)
+			}
+		},
+		func(f strictgin.StrictGinHandlerFunc, _ string) strictgin.StrictGinHandlerFunc {
+			return func(ctx *gin.Context, request any) (any, error) {
 				start := time.Now()
+				defer func() {
+					metrics.IncRequests(time.Since(start))
+				}()
 
-				response, err = f(ctx, request)
-
-				metrix := m.NewMetrics()
-				metrix.RequestsMetrics(time.Since(start))
-
-				return response, err
+				return f(ctx, request)
 			}
 		},
 	}

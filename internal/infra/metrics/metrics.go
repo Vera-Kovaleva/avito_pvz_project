@@ -46,23 +46,23 @@ func NewMetrics() *Metrics {
 	}
 }
 
-func (m *Metrics) PvzMetrics() {
+func (m Metrics) IncPVZs() {
 	m.pvzCounter.Inc()
 }
 
-func (m *Metrics) ReceptionsMetrics() {
+func (m Metrics) IncReceptions() {
 	m.receptionCounter.Inc()
 }
 
-func (m *Metrics) UsersMetrics() {
-	m.userCounter.Inc()
-}
-
-func (m *Metrics) ProductsMetrics() {
+func (m Metrics) IncProducts() {
 	m.productsCounter.Inc()
 }
 
-func (m *Metrics) RequestsMetrics(duration time.Duration) {
+func (m Metrics) IncUsers() {
+	m.userCounter.Inc()
+}
+
+func (m Metrics) IncRequests(duration time.Duration) {
 	m.httpDuration.Observe(duration.Seconds())
 	m.totalCounter.Inc()
 }

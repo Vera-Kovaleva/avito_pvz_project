@@ -13,7 +13,14 @@ func (s *Server) PostPvzPvzIdCloseLastReception(
 	ctx context.Context,
 	request oapi.PostPvzPvzIdCloseLastReceptionRequestObject,
 ) (oapi.PostPvzPvzIdCloseLastReceptionResponseObject, error) {
-	reception, err := s.receptions.Close(ctx, nil, request.PvzId)
+	reception, err := s.receptions.Close(ctx, s.GetCurrentUserFromCtx(ctx), request.PvzId)
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostPvzPvzIdCloseLastReception403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
 		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvzPvzIdCloseLastReception400JSONResponse{
@@ -34,7 +41,14 @@ func (s *Server) PostPvzPvzIdDeleteLastProduct(
 	ctx context.Context,
 	request oapi.PostPvzPvzIdDeleteLastProductRequestObject,
 ) (oapi.PostPvzPvzIdDeleteLastProductResponseObject, error) {
-	err := s.receptions.DeleteLastProduct(ctx, nil, request.PvzId)
+	err := s.receptions.DeleteLastProduct(ctx, s.GetCurrentUserFromCtx(ctx), request.PvzId)
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostPvzPvzIdDeleteLastProduct403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
 		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvzPvzIdDeleteLastProduct400JSONResponse{
@@ -51,16 +65,24 @@ func (s *Server) PostProducts(
 ) (oapi.PostProductsResponseObject, error) {
 	product, err := s.receptions.CreateProduct(
 		ctx,
-		nil,
+		s.GetCurrentUserFromCtx(ctx),
 		request.Body.PvzId,
 		domain.ProductType(request.Body.Type),
 	)
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostProducts403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
 		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostProducts400JSONResponse{
 			Message: "Неверный запрос или нет активной приемки",
 		}, nil
 	}
+
 	return oapi.PostProducts201JSONResponse{
 		DateTime:    pointer.Ref(product.CreatedAt),
 		Id:          pointer.Ref(product.ID),
@@ -73,7 +95,15 @@ func (s *Server) PostReceptions(
 	ctx context.Context,
 	request oapi.PostReceptionsRequestObject,
 ) (oapi.PostReceptionsResponseObject, error) {
-	reception, err := s.receptions.Create(ctx, nil, request.Body.PvzId)
+	reception, err := s.receptions.Create(ctx, s.GetCurrentUserFromCtx(ctx), request.Body.PvzId)
+
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostReceptions403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
 		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostReceptions400JSONResponse{

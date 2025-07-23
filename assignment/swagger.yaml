@@ -266,6 +266,18 @@ paths:
                             type: array
                             items:
                               $ref: '#/components/schemas/Product'
+        '400':
+          description: Неверный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /pvz/{pvzId}/close_last_reception:
     post:

@@ -23,17 +23,18 @@ func TestServicePVZ_Create(t *testing.T) {
 		name         string
 		authUser     domain.AuthenticatedUser
 		pvzCity      domain.PVZCity
-		prepareMocks func(*mocks.MockConnection, *mocks.MockPVZsRepository)
+		prepareMocks func(*mocks.MockConnection, *mocks.MockPVZsRepository, *mocks.MockMetrics)
 		check        func(*testing.T, domain.PVZ, error)
 	}{
 		{
 			name:     "Success",
 			authUser: nil,
 			pvzCity:  domain.Kzn,
-			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository, m *mocks.MockMetrics) {
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).
 					Once()
+				m.EXPECT().IncPVZs().Return().Once()
 			},
 			check: func(t *testing.T, pvz domain.PVZ, err error) {
 				require.NoError(t, err)
@@ -44,7 +45,7 @@ func TestServicePVZ_Create(t *testing.T) {
 			name:     "DB Error",
 			authUser: nil,
 			pvzCity:  domain.Kzn,
-			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository) {
+			prepareMocks: func(_ *mocks.MockConnection, repo *mocks.MockPVZsRepository, m *mocks.MockMetrics) {
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(errors.New("some error")).
 					Once()
@@ -65,9 +66,10 @@ func TestServicePVZ_Create(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
-				test.prepareMocks(connection, repoPVZ)
+				test.prepareMocks(connection, repoPVZ, metrics)
 			}
 
 			provider.EXPECT().
@@ -77,7 +79,7 @@ func TestServicePVZ_Create(t *testing.T) {
 				}).
 				Once()
 
-			pvz, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			pvz, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				Create(t.Context(), test.authUser, test.pvzCity)
 
 			test.check(t, pvz, err)
@@ -133,6 +135,7 @@ func TestServicePVZ_FindAll(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			test.prepareMocks(connection, repoPVZ)
 
@@ -142,7 +145,7 @@ func TestServicePVZ_FindAll(t *testing.T) {
 				}).
 				Once()
 
-			pvzs, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			pvzs, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				FindAll(t.Context())
 			test.check(t, pvzs, err)
 		})
@@ -453,6 +456,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			test.prepareMocks(connection, repoProduct, repoReception, repoPVZ)
 
@@ -462,7 +466,7 @@ func TestServicePVZ_FindPVZReceptionProducts(t *testing.T) {
 				}).
 				Times(3)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
@@ -519,6 +523,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrProducts(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			test.prepareMocks(connection, repoProduct, repoReception, repoPVZ)
 
@@ -528,7 +533,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrProducts(t *testing.T) {
 				}).
 				Once()
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
@@ -591,6 +596,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			test.prepareMocks(connection, repoProduct, repoReception, repoPVZ)
 
@@ -600,7 +606,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrReceptions(t *testing.T) {
 				}).
 				Times(2)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})
@@ -671,6 +677,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 			repoPVZ := mocks.NewMockPVZsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
 			repoReception := mocks.NewMockReceptionsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			test.prepareMocks(connection, repoProduct, repoReception, repoPVZ)
 
@@ -680,7 +687,7 @@ func TestServicePVZ_FindPVZReceptionProducts_ErrPVZs(t *testing.T) {
 				}).
 				Times(3)
 
-			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception).
+			result, err := domain.NewPVZService(provider, repoPVZ, repoProduct, repoReception, metrics).
 				FindPVZReceptionProducts(t.Context(), test.authUser, test.from, test.to, test.page, test.limit)
 			test.check(t, result, err)
 		})

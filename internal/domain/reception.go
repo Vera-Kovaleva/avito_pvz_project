@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	m "avito_pvz/internal/infra/metrics"
-
 	"github.com/google/uuid"
 )
 
@@ -72,17 +70,20 @@ type ReceptionService struct {
 	provider      ConnectionProvider
 	receptionRepo ReceptionsRepository
 	productRepo   ProductsRepository
+	metrics       Metrics
 }
 
 func NewReceptionService(
 	provider ConnectionProvider,
 	receptionRepo ReceptionsRepository,
 	productRepo ProductsRepository,
+	metrics Metrics,
 ) *ReceptionService {
 	return &ReceptionService{
 		provider:      provider,
 		receptionRepo: receptionRepo,
 		productRepo:   productRepo,
+		metrics:       metrics,
 	}
 }
 
@@ -98,7 +99,10 @@ func (s *ReceptionService) Create(
 	authUser AuthenticatedUser,
 	pvzID PVZID,
 ) (Reception, error) {
-	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может инициировать приём товара.
+	if authUser == nil || authUser.GetUserRole() != Employee {
+		return Reception{}, ErrNotAuthorized
+	}
+
 	var reception Reception
 
 	errValidID := validPVZID(pvzID)
@@ -124,8 +128,7 @@ func (s *ReceptionService) Create(
 		return reception, errors.Join(ErrAvitoServiceCreateReceptionFindActive, err)
 	}
 
-	metrix := m.NewMetrics()
-	metrix.ReceptionsMetrics()
+	s.metrics.IncReceptions()
 
 	return reception, nil
 }
@@ -135,6 +138,10 @@ func (s *ReceptionService) Close(
 	authUser AuthenticatedUser,
 	pvzID PVZID,
 ) (Reception, error) {
+	if authUser == nil || authUser.GetUserRole() != Employee {
+		return Reception{}, ErrNotAuthorized
+	}
+
 	var reception Reception
 
 	errValidID := validPVZID(pvzID)
@@ -156,6 +163,7 @@ func (s *ReceptionService) Close(
 	if err != nil {
 		return reception, errors.Join(ErrAvitoServiceCloseReception, err)
 	}
+
 	return reception, nil
 }
 
@@ -165,10 +173,11 @@ func (s *ReceptionService) CreateProduct(
 	pvzID PVZID,
 	productType ProductType,
 ) (Product, error) {
-	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может добавлять товары после его осмотра.
-	// Если же нет новой незакрытой приёмки товаров, то в таком случае должна возвращаться ошибка, и товар не должен добавляться в систему.
-	var product Product
+	if authUser == nil || authUser.GetUserRole() != Employee {
+		return Product{}, ErrNotAuthorized
+	}
 
+	var product Product
 	errValidID := validPVZID(pvzID)
 	if errValidID != nil {
 		return product, errors.Join(errValidID, ErrAvitoServiceProductInvalidPVZID)
@@ -198,8 +207,7 @@ func (s *ReceptionService) CreateProduct(
 		return product, errors.Join(ErrAvitoServiceCreateProduct, err)
 	}
 
-	metrix := m.NewMetrics()
-	metrix.ProductsMetrics()
+	s.metrics.IncProducts()
 
 	return product, nil
 }
@@ -209,7 +217,10 @@ func (s *ReceptionService) DeleteLastProduct(
 	authUser AuthenticatedUser,
 	pvzID PVZID,
 ) error {
-	// Только авторизованный пользователь системы с ролью «сотрудник ПВЗ» может удалять товары, которые были добавленыв рамках текущей приёмки на ПВЗ.
+	if authUser == nil || authUser.GetUserRole() != Employee {
+		return ErrNotAuthorized
+	}
+
 	errValidID := validPVZID(pvzID)
 	if errValidID != nil {
 		return errors.Join(errValidID, ErrAvitoServiceProductInvalidPVZID)

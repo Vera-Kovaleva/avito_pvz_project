@@ -59,3 +59,12 @@ type (
 		) ([]Product, error)
 	}
 )
+
+type (
+	Metrics interface {
+		IncPVZs()
+		IncReceptions()
+		IncProducts()
+		IncUsers()
+	}
+)

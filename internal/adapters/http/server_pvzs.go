@@ -12,7 +12,15 @@ func (s *Server) PostPvz(
 	ctx context.Context,
 	request oapi.PostPvzRequestObject,
 ) (oapi.PostPvzResponseObject, error) {
-	pvz, err := s.pvzs.Create(ctx, nil, domain.PVZCity(request.Body.City))
+	pvz, err := s.pvzs.Create(ctx, s.GetCurrentUserFromCtx(ctx), domain.PVZCity(request.Body.City))
+
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostPvz403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
 		//nolint:nilerr // generated code expects error in response.
 		return oapi.PostPvz400JSONResponse{
@@ -33,14 +41,24 @@ func (s *Server) GetPvz(
 ) (oapi.GetPvzResponseObject, error) {
 	all, err := s.pvzs.FindPVZReceptionProducts(
 		ctx,
-		nil,
+		s.GetCurrentUserFromCtx(ctx),
 		request.Params.StartDate,
 		request.Params.EndDate,
 		request.Params.Page,
 		request.Params.Limit,
 	)
+	if err == domain.ErrNotAuthorized {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.GetPvz403JSONResponse{
+			Message: "Доступ запрещен",
+		}, nil
+	}
+
 	if err != nil {
-		return nil, err
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.GetPvz400JSONResponse{
+			Message: "Неверный запрос",
+		}, nil
 	}
 
 	type RespReception = struct {

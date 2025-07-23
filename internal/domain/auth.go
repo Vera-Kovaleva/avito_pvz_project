@@ -31,23 +31,19 @@ func (u *authenticatedUser) GetUserRole() UserRole {
 }
 
 func AuthenticateByToken(token string) (AuthenticatedUser, error) {
-	partsCount := 2
-	parts := strings.Split(token, ":")
-	if len(parts) != partsCount {
+	parts := strings.SplitN(token, ":", 2)
+	if len(parts) != 2 {
 		return nil, errors.New("invalid token format")
 	}
 
-	userIDStr := parts[0]
-	roleStr := parts[1]
-
-	userID, err := uuid.Parse(userIDStr)
+	userID, err := uuid.Parse(parts[0])
 	if err != nil {
 		return nil, err
 	}
 
 	return &authenticatedUser{
 		ID:   userID,
-		Role: UserRole(roleStr),
+		Role: UserRole(parts[1]),
 	}, nil
 }
 

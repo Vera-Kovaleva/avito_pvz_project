@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 
-	m "avito_pvz/internal/infra/metrics"
-
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,6 +21,7 @@ var (
 type UserService struct {
 	provider               ConnectionProvider
 	userRepo               UsersRepository
+	metrics                Metrics
 	hashPassword           func(string) (string, error)
 	compareHashAndPassword func(string, string) error
 	generateToken          func(UserID, UserRole) (string, error)
@@ -32,6 +31,7 @@ type UserService struct {
 func NewUserService(
 	provider ConnectionProvider,
 	userRepo UsersRepository,
+	metrics Metrics,
 	hashPassword func(string) (string, error),
 	compareHashAndPassword func(string, string) error,
 	generateToken func(UserID, UserRole) (string, error),
@@ -40,6 +40,7 @@ func NewUserService(
 	return &UserService{
 		provider:               provider,
 		userRepo:               userRepo,
+		metrics:                metrics,
 		hashPassword:           hashPassword,
 		compareHashAndPassword: compareHashAndPassword,
 		generateToken:          generateToken,
@@ -86,8 +87,7 @@ func (s *UserService) Create(
 		return user, errors.Join(ErrAvitoServiceCreateUser, err)
 	}
 
-	metrix := m.NewMetrics()
-	metrix.UsersMetrics()
+	s.metrics.IncUsers()
 
 	return user, nil
 }

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -65,6 +66,12 @@ const (
 	Employee  UserRole = "employee"
 	Moderator UserRole = "moderator"
 )
+
+const (
+	CtxCurUserKey string = "my_ctx_key_for_auth"
+)
+
+var ErrNotAuthorized = errors.New("empt or access denied error")
 
 const (
 	Msk PVZCity = "Москва"

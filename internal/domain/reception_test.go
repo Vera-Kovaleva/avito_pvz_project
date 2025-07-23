@@ -27,14 +27,14 @@ func TestServiceReception_Create(t *testing.T) {
 		name         string
 		authUser     domain.AuthenticatedUser
 		pvzID        domain.PVZID
-		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockReceptionsRepository)
+		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockReceptionsRepository, *mocks.MockMetrics)
 		check        func(*testing.T, domain.Reception, error)
 	}{
 		{
 			name:     "Success",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -47,6 +47,8 @@ func TestServiceReception_Create(t *testing.T) {
 						return f(ctx, &mocks.MockConnection{})
 					}).
 					Once()
+				m.EXPECT().IncReceptions().Return().Once()
+
 				repo.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
 					Return(nil).Once()
 				repo.EXPECT().FindActive(mock.Anything, mock.Anything, pvzID).
@@ -61,7 +63,7 @@ func TestServiceReception_Create(t *testing.T) {
 			name:     "DB Error",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -81,7 +83,7 @@ func TestServiceReception_Create(t *testing.T) {
 			name:     "Error find active",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repo *mocks.MockReceptionsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					ExecuteTx(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -109,7 +111,7 @@ func TestServiceReception_Create(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository, m *mocks.MockMetrics) {
 			},
 			check: func(t *testing.T, _ domain.Reception, err error) {
 				require.Error(t, err)
@@ -125,12 +127,13 @@ func TestServiceReception_Create(t *testing.T) {
 
 			repoReception := mocks.NewMockReceptionsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
-				test.prepareMocks(provider, repoReception)
+				test.prepareMocks(provider, repoReception, metrics)
 			}
 
-			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct, metrics).
 				Create(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, testReception, err)
@@ -250,12 +253,13 @@ func TestServiceReception_Close(t *testing.T) {
 
 			repoReception := mocks.NewMockReceptionsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
 				test.prepareMocks(provider, repoReception)
 			}
 
-			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			testReception, err := domain.NewReceptionService(provider, repoReception, repoProduct, metrics).
 				Close(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, testReception, err)
@@ -280,14 +284,14 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 		authUser     domain.AuthenticatedUser
 		pvzID        domain.PVZID
 		productType  domain.ProductType
-		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockReceptionsRepository, *mocks.MockProductsRepository)
+		prepareMocks func(*mocks.MockConnectionProvider, *mocks.MockReceptionsRepository, *mocks.MockProductsRepository, *mocks.MockMetrics)
 		check        func(*testing.T, domain.Product, error)
 	}{
 		{
 			name:     "Success",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -300,6 +304,9 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 						return f(ctx, &mocks.MockConnection{})
 					}).
 					Once()
+
+				m.EXPECT().IncProducts().Return().Once()
+
 				repoReception.EXPECT().FindActive(mock.Anything, mock.Anything, mock.Anything).
 					Return(reception, nil).Once()
 				repoProduct.EXPECT().Create(mock.Anything, mock.Anything, mock.Anything).
@@ -313,7 +320,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 			name:     "Find active Error",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -333,7 +340,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 			name:     "Create Product error",
 			authUser: nil,
 			pvzID:    pvzID,
-			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository) {
+			prepareMocks: func(provider *mocks.MockConnectionProvider, repoReception *mocks.MockReceptionsRepository, repoProduct *mocks.MockProductsRepository, m *mocks.MockMetrics) {
 				provider.EXPECT().
 					Execute(mock.Anything, mock.Anything).
 					RunAndReturn(func(ctx context.Context, f func(context.Context, domain.Connection) error) error {
@@ -361,7 +368,7 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 			name:     "Invalid ID",
 			authUser: nil,
 			pvzID:    invalidPVZID,
-			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository) {
+			prepareMocks: func(_ *mocks.MockConnectionProvider, _ *mocks.MockReceptionsRepository, _ *mocks.MockProductsRepository, m *mocks.MockMetrics) {
 			},
 			check: func(t *testing.T, _ domain.Product, err error) {
 				require.Error(t, err)
@@ -377,12 +384,13 @@ func TestServiceReception_CreateProduct(t *testing.T) {
 
 			repoReception := mocks.NewMockReceptionsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
-				test.prepareMocks(provider, repoReception, repoProduct)
+				test.prepareMocks(provider, repoReception, repoProduct, metrics)
 			}
 
-			product, err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			product, err := domain.NewReceptionService(provider, repoReception, repoProduct, metrics).
 				CreateProduct(t.Context(), test.authUser, test.pvzID, test.productType)
 
 			test.check(t, product, err)
@@ -504,12 +512,13 @@ func TestServiceReception_DeleteLastProduct(t *testing.T) {
 
 			repoReception := mocks.NewMockReceptionsRepository(t)
 			repoProduct := mocks.NewMockProductsRepository(t)
+			metrics := mocks.NewMockMetrics(t)
 
 			if test.prepareMocks != nil {
 				test.prepareMocks(provider, repoReception, repoProduct)
 			}
 
-			err := domain.NewReceptionService(provider, repoReception, repoProduct).
+			err := domain.NewReceptionService(provider, repoReception, repoProduct, metrics).
 				DeleteLastProduct(t.Context(), test.authUser, test.pvzID)
 
 			test.check(t, err)

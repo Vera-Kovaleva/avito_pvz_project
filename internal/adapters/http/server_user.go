@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"strings"
 
 	"avito_pvz/internal/domain"
 	oapi "avito_pvz/internal/generated/oapi"
@@ -12,11 +13,24 @@ import (
 )
 
 func (s *Server) PostDummyLogin(
-	_ context.Context,
+	ctx context.Context,
 	request oapi.PostDummyLoginRequestObject,
 ) (oapi.PostDummyLoginResponseObject, error) {
+	generatedID := uuid.New()
+	password := generatedID.String()
+	email := strings.ReplaceAll(password, "-", "") + "@email.foo"
+	userRole := domain.UserRole(request.Body.Role)
+
+	user, err := s.users.Create(ctx, email, password, userRole)
+	if err != nil {
+		//nolint:nilerr // generated code expects error in response.
+		return oapi.PostDummyLogin400JSONResponse{
+			Message: "Неверный запрос",
+		}, nil
+	}
+
 	return oapi.PostDummyLogin200JSONResponse(
-		uuid.New().String() + ":" + string(request.Body.Role),
+		user.Token,
 	), nil
 }
 

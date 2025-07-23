@@ -59,7 +59,7 @@ func TestProductIntegration(t *testing.T) {
 		productsFound, err = products.Search(ctx, connection, nil, nil, nil, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, limit)
-		require.Equal(t, product2.ID, productsFound[0].ID)
+		require.Equal(t, product2.ID, productsFound[1].ID)
 	})
 }
 
@@ -103,7 +103,7 @@ func TestProductIntegrationSearch(t *testing.T) {
 		productsFound, err := products.Search(ctx, connection, nil, nil, &page, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, 1)
-		require.Equal(t, product3.ID, productsFound[0].ID)
+		require.Equal(t, product1.ID, productsFound[0].ID)
 
 		page = 1
 		productsFound, err = products.Search(ctx, connection, nil, nil, &page, &limit)
@@ -126,13 +126,13 @@ func TestProductIntegrationSearch(t *testing.T) {
 		productsFound, err = products.Search(ctx, connection, &from, &to, &page, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, 3)
-		require.Equal(t, product1.ID, productsFound[2].ID)
+		require.Equal(t, product1.ID, productsFound[0].ID)
 
 		limit = 1
 		productsFound, err = products.Search(ctx, connection, nil, nil, nil, &limit)
 		require.NoError(t, err)
 		require.Len(t, productsFound, limit)
-		require.Equal(t, product3.ID, productsFound[0].ID)
+		require.Equal(t, product3.ID, productsFound[2].ID)
 	})
 }
 

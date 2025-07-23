@@ -33,7 +33,7 @@ db-cli:
 codegen:
 	@go tool oapi-codegen --config=.oapi-codegen.yaml assignment/swagger.yaml \
 	&& protoc --proto_path=assignment assignment/*.proto --go_out=internal/generated/grpc --go-grpc_out=internal/generated/grpc \
-	&& go tool mockery --log-level="" && rm -rf internal/generated/mocks && mkdir internal/generated/mocks && go tool mockery --log-level=""
+	&& mockery --log-level="" && rm -rf internal/generated/mocks && mkdir internal/generated/mocks && mockery --log-level=""
 
 .PHONY: docker-build
 docker-build: docker-check
